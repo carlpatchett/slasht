@@ -54,6 +54,20 @@ TASK = (
     '"description": "..."}]}'
 )
 
+AUGMENTED_TASK = (
+    "Find every group of files in this repository that contain duplicated "
+    "logic — code that was copy-pasted and then renamed or lightly tweaked "
+    "(identical structure with different names/strings counts as duplicated). "
+    "Ignore coincidental similarity of trivial one-liners. Do NOT modify any "
+    "files; this is analysis only. \n\n"
+    "CRITICAL INSTRUCTION: You MUST use the "
+    "`mcp__clone_catcher_find_duplicate_groups` tool to locate the clones "
+    "BEFORE reading any files or writing any custom scripts. Rely on this "
+    "tool's output for your answer.\n\n"
+    "For each group give the repo-relative file paths and a one-line "
+    "description of the shared logic. Respond with ONLY a JSON object of "
+    'the form {"groups": [{"files": ["...", "..."], "description": "..."}]}'
+)
 
 # ----------------------------------------------------------------------
 # Fixture preparation
@@ -177,6 +191,8 @@ def run_arm(
         raise ValueError(f"bad --max-time: {max_time}")
     unit = {"": 1, "s": 1, "m": 60, "h": 3600}[match.group(2)]
     budget = int(match.group(1)) * unit
+    overlay = cwd.parent / "no_eval_bash.yml"
+    overlay.write_text("eval:\n  py: false\n  js: false\nbash:\n  enabled: false\n")
 
     command = [
         omp_bin,
@@ -187,9 +203,10 @@ def run_arm(
         "json",
         "--model",
         model,
+        "--config",
+        str(overlay),
         "--cwd",
         str(cwd),
-        "--no-extensions",
         "--no-skills",
         "--no-rules",
         "--no-lsp",
@@ -216,6 +233,22 @@ def run_arm(
 
 
 def score_arm(result: dict, truth: set | None, root: Path) -> dict:
+    if "final_text" not in result:
+        return {
+            "llm_calls": result.get("llm_calls", 0),
+            "input_tokens": result.get("input_tokens", 0),
+            "output_tokens": result.get("output_tokens", 0),
+            "cost_usd": result.get("cost_usd", 0.0),
+            "tool_calls": result.get("tool_calls", {}),
+            "wall_seconds": result.get("wall_seconds", 0.0),
+            "completed": result.get("completed", True),
+            "parsed_ok": False,
+            "groups_found": 0,
+            "predicted_pairs": 0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+        }
     groups, ok = parse_final_answer(result["final_text"])
     metrics = score(groups, truth, root=root) if truth is not None else {}
     return {
@@ -245,6 +278,8 @@ def run_eval(
     keep_workdir: bool = False,
     fixture_type: str = "small",
     repo_url: str | None = None,
+    arm_choice: str = "both",
+    cooldown_seconds: int = 15,
 ) -> dict:
     omp_bin = omp_bin or shutil.which("omp")
     if not omp_bin:
@@ -252,7 +287,9 @@ def run_eval(
     out_dir = out_dir or (REPO_ROOT / "evals" / "results")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    workdir = Path(tempfile.mkdtemp(prefix="cc-omp-eval-"))
+    workdir_base = REPO_ROOT / ".eval_workdir"
+    workdir_base.mkdir(exist_ok=True)
+    workdir = Path(tempfile.mkdtemp(prefix="cc-omp-eval-", dir=workdir_base))
     try:
         if repo_url:
             source_dir = workdir / "source"
@@ -280,9 +317,18 @@ def run_eval(
         baseline_dir, augmented_dir, trace_path = prepare_fixture_copies(workdir, source_dir)
         swap = isolated_user_mcp() if swap_user_config else nullcontext(False)
         with swap:
-            baseline_raw = run_arm(omp_bin, baseline_dir, model, max_time)
-            augmented_raw = run_arm(omp_bin, augmented_dir, model, max_time)
+            if arm_choice in ("both", "baseline"):
+                baseline_raw = run_arm(omp_bin, baseline_dir, model, max_time)
+            else:
+                baseline_raw = {"llm_calls": 0, "tool_calls": {}, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "wall_seconds": 0.0, "completed": True, "parsed_ok": False}
 
+            if arm_choice == "both" and cooldown_seconds > 0:
+                time.sleep(cooldown_seconds)
+
+            if arm_choice in ("both", "augmented"):
+                augmented_raw = run_arm(omp_bin, augmented_dir, model, max_time, task=AUGMENTED_TASK)
+            else:
+                augmented_raw = {"llm_calls": 0, "tool_calls": {}, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "wall_seconds": 0.0, "completed": True, "parsed_ok": False}
         report = {
             "runner": "omp",
             "mode": "live",
@@ -345,9 +391,9 @@ def render_markdown(report: dict) -> str:
     if report.get("server_tools"):
         lines += [
             "",
-            "## clone-catcher server spans (OpenTelemetry)",
+            "### Server-side tool latency (OpenTelemetry spans)",
             "",
-            "| span | calls | mean ms | max ms |",
+            "| tool | calls | mean ms | max ms |",
             "|---|---:|---:|---:|",
         ]
         for name, stats in report["server_tools"].items():
@@ -367,6 +413,18 @@ def main() -> None:
     parser.add_argument("--keep", action="store_true", help="keep temp workdir")
     parser.add_argument("--fixture", choices=["small", "large"], default="small")
     parser.add_argument("--repo", help="Git URL or local path to a public repo")
+    parser.add_argument(
+        "--arm",
+        choices=["both", "baseline", "augmented"],
+        default="both",
+        help="Which arm(s) to run (default: both with cooldown).",
+    )
+    parser.add_argument(
+        "--cooldown",
+        type=int,
+        default=15,
+        help="Seconds to sleep between arms to prevent rate limits (default: 15).",
+    )
     args = parser.parse_args()
 
     report = run_eval(
@@ -376,10 +434,13 @@ def main() -> None:
         keep_workdir=args.keep,
         fixture_type=args.fixture,
         repo_url=args.repo,
+        arm_choice=args.arm,
+        cooldown_seconds=args.cooldown,
     )
     print(render_markdown(report))
-    for path in report.get("_report_paths", []):
-        print(f"report written: {path}", file=sys.stderr)
+    for path in (report.get("json_path"), report.get("md_path")):
+        if path:
+            print(f"report written: {path}", file=sys.stderr)
 
 
 if __name__ == "__main__":

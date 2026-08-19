@@ -53,12 +53,13 @@ TASK_PROMPT = (
 MAX_READ_CHARS = 12_000
 SERVER_TOOL_SPANS = (
     "find_structural_clones",
+    "find_duplicate_groups",
     "get_diff_summary",
     "reindex_workspace",
     "clone_catcher.index.build",
     "clone_catcher.index.query",
+    "clone_catcher.index.groups",
 )
-
 
 # ----------------------------------------------------------------------
 # Tools
