@@ -185,14 +185,13 @@ def run_arm(
     max_time: str,
     task: str = TASK,
     timeout_padding: int = 120,
+    ablate: bool = False,
 ) -> dict:
     match = re.fullmatch(r"(\d+)([smh]?)", max_time.strip())
     if not match:
         raise ValueError(f"bad --max-time: {max_time}")
     unit = {"": 1, "s": 1, "m": 60, "h": 3600}[match.group(2)]
     budget = int(match.group(1)) * unit
-    overlay = cwd.parent / "no_eval_bash.yml"
-    overlay.write_text("eval:\n  py: false\n  js: false\nbash:\n  enabled: false\n")
 
     command = [
         omp_bin,
@@ -203,18 +202,19 @@ def run_arm(
         "json",
         "--model",
         model,
-        "--config",
-        str(overlay),
         "--cwd",
         str(cwd),
         "--no-skills",
-        "--no-rules",
         "--no-lsp",
         "--auto-approve",
         "--max-time",
         max_time,
-        task,
     ]
+    if ablate:
+        overlay = cwd.parent / "no_eval_bash.yml"
+        overlay.write_text("eval:\n  py: false\n  js: false\nbash:\n  enabled: false\n")
+        command.extend(["--config", str(overlay), "--no-rules"])
+    command.append(task)
     started = time.perf_counter()
     completed = subprocess.run(
         command,
@@ -263,12 +263,6 @@ def score_arm(result: dict, truth: set | None, root: Path) -> dict:
         **metrics,
     }
 
-
-
-# ----------------------------------------------------------------------
-# Orchestration
-
-
 def run_eval(
     model: str = DEFAULT_MODEL,
     max_time: str = "10m",
@@ -280,6 +274,7 @@ def run_eval(
     repo_url: str | None = None,
     arm_choice: str = "both",
     cooldown_seconds: int = 15,
+    ablate: bool = False,
 ) -> dict:
     omp_bin = omp_bin or shutil.which("omp")
     if not omp_bin:
@@ -318,7 +313,9 @@ def run_eval(
         swap = isolated_user_mcp() if swap_user_config else nullcontext(False)
         with swap:
             if arm_choice in ("both", "baseline"):
-                baseline_raw = run_arm(omp_bin, baseline_dir, model, max_time)
+                baseline_raw = run_arm(
+                    omp_bin, baseline_dir, model, max_time, ablate=ablate
+                )
             else:
                 baseline_raw = {"llm_calls": 0, "tool_calls": {}, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "wall_seconds": 0.0, "completed": True, "parsed_ok": False}
 
@@ -326,9 +323,12 @@ def run_eval(
                 time.sleep(cooldown_seconds)
 
             if arm_choice in ("both", "augmented"):
-                augmented_raw = run_arm(omp_bin, augmented_dir, model, max_time, task=AUGMENTED_TASK)
+                augmented_raw = run_arm(
+                    omp_bin, augmented_dir, model, max_time, task=AUGMENTED_TASK, ablate=ablate
+                )
             else:
                 augmented_raw = {"llm_calls": 0, "tool_calls": {}, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "wall_seconds": 0.0, "completed": True, "parsed_ok": False}
+
         report = {
             "runner": "omp",
             "mode": "live",
@@ -425,6 +425,11 @@ def main() -> None:
         default=15,
         help="Seconds to sleep between arms to prevent rate limits (default: 15).",
     )
+    parser.add_argument(
+        "--ablate",
+        action="store_true",
+        help="Ablate eval and bash tools (default: False).",
+    )
     args = parser.parse_args()
 
     report = run_eval(
@@ -436,6 +441,7 @@ def main() -> None:
         repo_url=args.repo,
         arm_choice=args.arm,
         cooldown_seconds=args.cooldown,
+        ablate=args.ablate,
     )
     print(render_markdown(report))
     for path in (report.get("json_path"), report.get("md_path")):
