@@ -397,8 +397,8 @@ def run_eval(
     finally:
         if keep_workdir:
             print(f"workdir kept: {workdir}", file=sys.stderr)
-        else:
-            shutil.rmtree(workdir, ignore_errors=True)
+        elif workdir.exists():
+            subprocess.run(["rm", "-rf", str(workdir)], check=False)
 
 
 def render_markdown(report: dict) -> str:

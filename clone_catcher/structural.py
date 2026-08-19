@@ -68,27 +68,45 @@ def structural_tokens(root) -> list[StructToken]:
 
     Pruned subtrees are skipped entirely; unnamed children are emitted only
     when they are operators/keywords rather than punctuation.
+    Uses TreeCursor for zero-allocation C-level AST traversal.
     """
+    cursor = root.walk()
     tokens: list[StructToken] = []
-    # The file wrapper (module / source_file / compilation_unit) is not
-    # structure: empty and comment-only files must yield empty skeletons.
-    stack = list(reversed(root.children))
-    while stack:
-        node = stack.pop()
-        if not node.is_named:
-            if node.type not in PUNCTUATION:
-                tokens.append(
-                    StructToken(
-                        node.type, node.start_point.row + 1, node.end_point.row + 1
-                    )
-                )
+
+    if not cursor.goto_first_child():
+        return tokens
+    while True:
+        node_type = str(cursor.node.type)
+        is_named = bool(cursor.node.is_named)
+        start_row = int(cursor.node.start_point[0] + 1)
+        end_row = int(cursor.node.end_point[0] + 1)
+
+        pruned = False
+        if not is_named:
+            if node_type not in PUNCTUATION:
+                tokens.append(StructToken(node_type, start_row, end_row))
+        elif _pruned(node_type):
+            pruned = True
+        else:
+            tokens.append(StructToken(node_type, start_row, end_row))
+
+        if not pruned and cursor.goto_first_child():
             continue
-        if _pruned(node.type):
+
+        if cursor.goto_next_sibling():
             continue
-        tokens.append(
-            StructToken(node.type, node.start_point.row + 1, node.end_point.row + 1)
-        )
-        stack.extend(reversed(node.children))
+
+        backtracked = False
+        while cursor.goto_parent():
+            if cursor.node == root:
+                backtracked = True
+                break
+            if cursor.goto_next_sibling():
+                backtracked = True
+                break
+        if (backtracked and cursor.node == root) or not backtracked:
+            break
+
     return tokens
 
 

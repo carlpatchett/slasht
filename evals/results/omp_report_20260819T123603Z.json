@@ -1,0 +1,72 @@
+{
+  "runner": "omp",
+  "mode": "live",
+  "model": "google-antigravity/gemini-3.7-flash:medium",
+  "fixture": "https://github.com/pallets/click",
+  "generated_at": "2026-08-19T12:36:03.131380+00:00",
+  "truth_pairs": 2,
+  "arms": {
+    "baseline": {
+      "llm_calls": 20,
+      "input_tokens": 98915,
+      "output_tokens": 9239,
+      "cost_usd": 0.1611,
+      "tool_calls": {
+        "eval": 18,
+        "glob": 1
+      },
+      "wall_seconds": 122.8,
+      "completed": true,
+      "parsed_ok": true,
+      "groups_found": 1,
+      "predicted_pairs": 1,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "augmented": {
+      "llm_calls": 11,
+      "input_tokens": 38770,
+      "output_tokens": 1658,
+      "cost_usd": 0.0512,
+      "tool_calls": {
+        "read": 6,
+        "write": 4
+      },
+      "wall_seconds": 28.8,
+      "completed": true,
+      "parsed_ok": true,
+      "groups_found": 2,
+      "predicted_pairs": 2,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "server_tools": {
+    "clone_catcher.index.build": {
+      "calls": 1,
+      "mean_ms": 299.111,
+      "max_ms": 299.111
+    },
+    "clone_catcher.index.groups": {
+      "calls": 2,
+      "mean_ms": 12.869,
+      "max_ms": 13.096
+    },
+    "find_duplicate_groups": {
+      "calls": 2,
+      "mean_ms": 162.702,
+      "max_ms": 312.195
+    },
+    "get_diff_summary": {
+      "calls": 2,
+      "mean_ms": 0.373,
+      "max_ms": 0.397
+    }
+  },
+  "notes": [
+    "Both arms: identical fixture copies, identical omp builtins, identical prompt; only difference is the clone-catcher MCP server in the augmented arm.",
+    "omp's per-call usage includes its fixed system-prompt/context overhead (~25k input tokens/call at probe time) \u2014 identical in both arms, so deltas remain meaningful."
+  ]
+}
