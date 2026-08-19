@@ -8,7 +8,7 @@ from sources import (
     PY_LITERALS_ONLY,
 )
 
-from clone_catcher.difftool import diff_summary
+from slasht.difftool import diff_summary
 
 
 def write(tmp_path, name, text):

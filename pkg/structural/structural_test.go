@@ -3,7 +3,7 @@ package structural
 import (
 	"testing"
 
-	"github.com/carlpatchett/clone-catcher/pkg/parser"
+	"github.com/carlpatchett/slasht/pkg/parser"
 )
 
 func TestExtractTokens(t *testing.T) {

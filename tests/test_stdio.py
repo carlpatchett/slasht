@@ -14,7 +14,7 @@ async def test_stdio_roundtrip(tmp_path):
 
     params = StdioServerParameters(
         command=sys.executable,
-        args=["-m", "clone_catcher"],
+        args=["-m", "slasht"],
         env={
             "CLONE_CATCHER_ROOT": str(tmp_path),
             "CLONE_CATCHER_TRACE_PATH": str(tmp_path / "trace.jsonl"),

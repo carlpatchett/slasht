@@ -1,14 +1,14 @@
 """A/B eval driven through omp itself — real agent runs on your real model.
 
-Baseline arm: a copy of the messy fixture, NO clone-catcher anywhere.
+Baseline arm: a copy of the messy fixture, NO slasht anywhere.
 Augmented arm: an identical copy whose project ``.omp/mcp.json`` registers
-clone-catcher against that copy. Both arms run ``omp -p --mode json`` with the
+slasht against that copy. Both arms run ``omp -p --mode json`` with the
 same model (default: your google-antigravity/gemini-3.7-flash), same builtins,
 same prompt. Metrics come from omp's own usage telemetry (per-call input/
-output tokens and cost), the tool-execution event stream, and clone-catcher's
+output tokens and cost), the tool-execution event stream, and slasht's
 OpenTelemetry JSONL spans for the augmented arm.
 
-To guarantee the baseline sees no clone-catcher, the user-level
+To guarantee the baseline sees no slasht, the user-level
 ``~/.omp/agent/mcp.json`` is moved aside for the duration of the run and
 restored afterwards (a live session that already loaded its MCP config is
 unaffected; child omp processes read the file at their own startup).
@@ -61,7 +61,7 @@ AUGMENTED_TASK = (
     "Ignore coincidental similarity of trivial one-liners. Do NOT modify any "
     "files; this is analysis only. \n\n"
     "CRITICAL INSTRUCTION: You MUST use the "
-    "`mcp__clone_catcher_find_duplicate_groups` tool to locate the clones "
+    "`mcp__slasht_find_duplicate_groups` tool to locate the clones "
     "BEFORE reading any files or writing any custom scripts. Rely on this "
     "tool's output for your answer.\n\n"
     "For each group give the repo-relative file paths and a one-line "
@@ -74,7 +74,7 @@ AUGMENTED_TASK = (
 
 
 def prepare_fixture_copies(base: Path, source_dir: Path) -> tuple[Path, Path, Path]:
-    """Two identical fixture copies; the augmented one registers clone-catcher."""
+    """Two identical fixture copies; the augmented one registers slasht."""
     baseline = base / "baseline_repo"
     augmented = base / "augmented_repo"
     shutil.copytree(source_dir, baseline)
@@ -87,12 +87,12 @@ def prepare_fixture_copies(base: Path, source_dir: Path) -> tuple[Path, Path, Pa
             "packages/coding-agent/src/config/mcp-schema.json"
         ),
         "mcpServers": {
-            "clone-catcher": {
+            "slasht": {
                 "command": str(REPO_ROOT / ".venv" / "bin" / "python"),
-                "args": ["-m", "clone_catcher"],
+                "args": ["-m", "slasht"],
                 "env": {
-                    "CLONE_CATCHER_ROOT": str(augmented),
-                    "CLONE_CATCHER_TRACE_PATH": str(trace_path),
+                    "SLASHT_ROOT": str(augmented),
+                    "SLASHT_TRACE_PATH": str(trace_path),
                 },
             }
         },
@@ -294,8 +294,8 @@ def run_eval(
             subprocess.run(
                 ["git", "clone", "--depth", "1", repo_url, str(source_dir)], check=True
             )
-            from clone_catcher.config import Settings
-            from clone_catcher.signature import CloneIndex
+            from slasht.config import Settings
+            from slasht.signature import CloneIndex
 
             idx = CloneIndex(Settings(root=source_dir))
             idx.build()
@@ -389,7 +389,7 @@ def run_eval(
             "notes": [
                 (
                     "Both arms: identical fixture copies, identical omp builtins, "
-                    "identical prompt; only difference is the clone-catcher MCP "
+                    "identical prompt; only difference is the slasht MCP "
                     "server in the augmented arm."
                 ),
                 (
@@ -416,7 +416,7 @@ def run_eval(
 
 def render_markdown(report: dict) -> str:
     lines = [
-        "# clone-catcher A/B eval (omp runner, live model)",
+        "# slasht A/B eval (omp runner, live model)",
         "",
         f"- generated: {report['generated_at']}",
         f"- model: `{report['model']}`",

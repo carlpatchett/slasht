@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/carlpatchett/clone-catcher/pkg/minhash"
-	"github.com/carlpatchett/clone-catcher/pkg/parser"
-	"github.com/carlpatchett/clone-catcher/pkg/structural"
-	"github.com/carlpatchett/clone-catcher/pkg/telemetry"
+	"github.com/carlpatchett/slasht/pkg/minhash"
+	"github.com/carlpatchett/slasht/pkg/parser"
+	"github.com/carlpatchett/slasht/pkg/structural"
+	"github.com/carlpatchett/slasht/pkg/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 )
 
@@ -96,7 +96,7 @@ func (idx *CloneIndex) Build(ctx context.Context) (map[string]interface{}, error
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
 
-	ctx, span := idx.Tracer.Start(ctx, "clone_catcher.index.build", attribute.String("root", idx.Root))
+	ctx, span := idx.Tracer.Start(ctx, "slasht.index.build", attribute.String("root", idx.Root))
 	defer span.End()
 
 	started := time.Now()
@@ -294,7 +294,7 @@ func (idx *CloneIndex) DuplicateGroups(ctx context.Context, threshold float64, m
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
-	ctx, span := idx.Tracer.Start(ctx, "clone_catcher.index.groups", attribute.Float64("threshold", threshold))
+	ctx, span := idx.Tracer.Start(ctx, "slasht.index.groups", attribute.Float64("threshold", threshold))
 	defer span.End()
 
 	if maxGroups <= 0 {

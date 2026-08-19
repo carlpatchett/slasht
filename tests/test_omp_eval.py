@@ -75,7 +75,7 @@ emit({{"type": "agent_start"}})
 emit({{"type": "message_end", "message": {{"role": "assistant",
     "content": [{{"type": "text", "text": ""}}],
     "usage": {{"input": 25000, "output": 120, "cost": {{"total": 0.02}}}}}}}})
-tool = "mcp__clone_catcher_find_structural_clones" if augmented else "read"
+tool = "mcp__slasht_find_structural_clones" if augmented else "read"
 emit({{"type": "tool_execution_start", "tool": tool}})
 final = {final_all} if augmented else {final_partial}
 text = "```json\\n" + json.dumps(final) + "\\n```"
@@ -86,7 +86,8 @@ emit({{"type": "agent_end", "messages": []}})
 print("\\n".join(events))
 if augmented:
     cfg = json.load(open(os.path.join(cwd, ".omp", "mcp.json")))
-    trace = cfg["mcpServers"]["clone-catcher"]["env"]["CLONE_CATCHER_TRACE_PATH"]
+    server_env = cfg["mcpServers"]["slasht"]["env"]
+    trace = server_env.get("SLASHT_TRACE_PATH") or server_env.get("CLONE_CATCHER_TRACE_PATH")
     with open(trace, "a") as handle:
         handle.write(json.dumps({{"name": "find_structural_clones", "duration_ms": 12.5}}) + "\\n")
 """
@@ -128,7 +129,7 @@ async def test_fake_omp_run_produces_scored_report(tmp_path):
 
     # Tool accounting distinguishes the arms.
     assert baseline["tool_calls"] == {"read": 1}
-    assert augmented["tool_calls"] == {"mcp__clone_catcher_find_structural_clones": 1}
+    assert augmented["tool_calls"] == {"mcp__slasht_find_structural_clones": 1}
 
     # The synthetic server span landed and was aggregated.
     assert report["server_tools"]["find_structural_clones"]["calls"] == 1

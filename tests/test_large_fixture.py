@@ -4,8 +4,8 @@ import itertools
 
 import pytest
 
-from clone_catcher.config import Settings
-from clone_catcher.signature import CloneIndex
+from slasht.config import Settings
+from slasht.signature import CloneIndex
 from evals.gen_large_fixture import generate
 
 EXPECTED_FAMILIES = 7

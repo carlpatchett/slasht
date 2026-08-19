@@ -1,10 +1,10 @@
-"""A/B effectiveness harness for clone-catcher.
+"""A/B effectiveness harness for slasht.
 
 Runs the same "find the duplicated logic" task twice against the planted
 fixture repo:
 
   * baseline   — generic tools only (list_files / read_file / search_files)
-  * augmented  — the same tools PLUS clone-catcher over real stdio MCP
+  * augmented  — the same tools PLUS slasht over real stdio MCP
 
 and compares token usage, LLM turns, tool calls, wall time, and answer
 quality (pairwise precision/recall/F1 against evals/ground_truth.json).
@@ -56,9 +56,9 @@ SERVER_TOOL_SPANS = (
     "find_duplicate_groups",
     "get_diff_summary",
     "reindex_workspace",
-    "clone_catcher.index.build",
-    "clone_catcher.index.query",
-    "clone_catcher.index.groups",
+    "slasht.index.build",
+    "slasht.index.query",
+    "slasht.index.groups",
 )
 
 # ----------------------------------------------------------------------
@@ -172,10 +172,10 @@ async def make_mcp_tools(trace_path: Path) -> list[Tool]:
 
     params = StdioServerParameters(
         command=sys.executable,
-        args=["-m", "clone_catcher"],
+        args=["-m", "slasht"],
         env={
-            "CLONE_CATCHER_ROOT": str(FIXTURE),
-            "CLONE_CATCHER_TRACE_PATH": str(trace_path),
+            "SLASHT_ROOT": str(FIXTURE),
+            "SLASHT_TRACE_PATH": str(trace_path),
         },
     )
     client = Client(stdio_client(params))
@@ -617,7 +617,7 @@ async def run_eval(
             [
                 (
                     "mode=scripted: token/turn numbers are synthetic; report verifies "
-                    "harness plumbing only, not clone-catcher effectiveness."
+                    "harness plumbing only, not slasht effectiveness."
                 )
             ]
             if mode == "scripted"
@@ -636,7 +636,7 @@ async def run_eval(
 
 def render_markdown(report: dict) -> str:
     lines = [
-        "# clone-catcher A/B eval",
+        "# slasht A/B eval",
         "",
         f"- generated: {report['generated_at']}",
         f"- mode: **{report['mode']}** (model: {report['model']})",

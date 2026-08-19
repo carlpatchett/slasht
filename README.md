@@ -166,8 +166,8 @@ Add `slasht` to your MCP configuration (e.g., `~/.omp/agent/mcp.json`, Claude De
     "slasht": {
       "command": "/absolute/path/to/slasht/bin/slasht",
       "env": {
-        "CLONE_CATCHER_ROOT": "${PWD}",
-        "CLONE_CATCHER_TRACE_PATH": "${TMPDIR:-/tmp}/slasht_trace.jsonl"
+        "SLASHT_ROOT": "${PWD}",
+        "SLASHT_TRACE_PATH": "${TMPDIR:-/tmp}/slasht_trace.jsonl"
       }
     }
   }
@@ -180,11 +180,11 @@ Add `slasht` to your MCP configuration (e.g., `~/.omp/agent/mcp.json`, Claude De
 
 | Environment Variable | Default | Description |
 |---|---|---|
-| `CLONE_CATCHER_ROOT` | Current Working Directory | Root directory to index and resolve relative file paths against. |
-| `CLONE_CATCHER_TRACE_PATH` | `""` (disabled) | Destination file path for OpenTelemetry JSONL span logs. |
-| `CLONE_CATCHER_SHINGLE_K` | `4` | Token shingle width for MinHash fingerprinting. |
-| `CLONE_CATCHER_NUM_PERM` | `128` | MinHash permutations (128 yields standard error approx 0.03). |
-| `CLONE_CATCHER_EXCLUDE` | `.git,.jj,node_modules,.venv,...` | Comma-separated list of directory names to skip during indexing. |
+| `SLASHT_ROOT` | Current Working Directory | Root directory to index and resolve relative file paths against. |
+| `SLASHT_TRACE_PATH` | `""` (disabled) | Destination file path for OpenTelemetry JSONL span logs. |
+| `SLASHT_SHINGLE_K` | `4` | Token shingle width for MinHash fingerprinting. |
+| `SLASHT_NUM_PERM` | `128` | MinHash permutations (128 yields standard error approx 0.03). |
+| `SLASHT_EXCLUDE` | `.git,.jj,node_modules,.venv,...` | Comma-separated list of directory names to skip during indexing. |
 
 ---
 

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/carlpatchett/clone-catcher/pkg/difftool"
-	"github.com/carlpatchett/clone-catcher/pkg/index"
-	"github.com/carlpatchett/clone-catcher/pkg/telemetry"
+	"github.com/carlpatchett/slasht/pkg/difftool"
+	"github.com/carlpatchett/slasht/pkg/index"
+	"github.com/carlpatchett/slasht/pkg/telemetry"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 )
@@ -27,7 +27,7 @@ type Config struct {
 
 // NewServer initializes the MCP server and registers all 4 tool endpoints.
 func NewServer(cfg Config) (*Server, error) {
-	tr, err := telemetry.InitTracer("clone-catcher", cfg.TracePath)
+	tr, err := telemetry.InitTracer("slasht", cfg.TracePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "telemetry init error: %v\n", err)
 	}
@@ -35,7 +35,7 @@ func NewServer(cfg Config) (*Server, error) {
 	idx := index.NewCloneIndex(cfg.Root, tr)
 
 	s := server.NewMCPServer(
-		"clone-catcher",
+		"slasht",
 		"1.0.0",
 		server.WithToolCapabilities(true),
 	)

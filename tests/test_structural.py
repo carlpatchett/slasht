@@ -16,8 +16,8 @@ from sources import (
     PY_LITERALS_ONLY,
 )
 
-from clone_catcher.parsing import detect_language, parse_source
-from clone_catcher.structural import structural_tokens, token_types
+from slasht.parsing import detect_language, parse_source
+from slasht.structural import structural_tokens, token_types
 
 
 def stream(source: str, language: str = "python") -> list[str]:

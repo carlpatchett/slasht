@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from clone_catcher.config import Settings
-from clone_catcher.signature import CloneIndex
+from slasht.config import Settings
+from slasht.signature import CloneIndex
 
 EVALS = Path(__file__).resolve().parent.parent / "evals"
 FIXTURE = EVALS / "messy_codebase"

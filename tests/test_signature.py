@@ -3,8 +3,8 @@
 import pytest
 from sources import NOISE_CONFIG, NOISE_FIB, PY_A, PY_CLONE
 
-from clone_catcher.config import Settings
-from clone_catcher.signature import CloneIndex
+from slasht.config import Settings
+from slasht.signature import CloneIndex
 
 
 @pytest.fixture

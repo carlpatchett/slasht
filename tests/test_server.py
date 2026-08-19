@@ -19,7 +19,7 @@ def server(tmp_path, monkeypatch):
     (tmp_path / "numbers.py").write_text(NOISE_FIB)
     monkeypatch.setenv("CLONE_CATCHER_ROOT", str(tmp_path))
     monkeypatch.setenv("CLONE_CATCHER_TRACE_PATH", str(tmp_path / "trace.jsonl"))
-    from clone_catcher import server as srv
+    from slasht import server as srv
 
     return importlib.reload(srv)
 

@@ -1,4 +1,4 @@
-"""Shared fixture sources for clone-catcher tests.
+"""Shared fixture sources for slasht tests.
 
 Each pair (X, X_CLONE) is structurally identical: same statement kinds in the same
 order, differing only in identifiers, literals, comments, and whitespace.

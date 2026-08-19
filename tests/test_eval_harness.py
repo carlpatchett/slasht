@@ -42,5 +42,5 @@ async def test_scripted_ab_run_produces_report(tmp_path):
     for path in report["_report_paths"]:
         assert Path(path).is_file()
     markdown = Path(report["_report_paths"][1]).read_text()
-    assert "clone-catcher A/B eval" in markdown
+    assert "slasht A/B eval" in markdown
     assert "mode: **scripted**" in markdown

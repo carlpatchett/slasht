@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/carlpatchett/clone-catcher/pkg/telemetry"
+	"github.com/carlpatchett/slasht/pkg/telemetry"
 )
 
 func TestCloneIndexPolyglot(t *testing.T) {

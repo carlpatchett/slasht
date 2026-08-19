@@ -1,4 +1,4 @@
-"""clone-catcher MCP server.
+"""slasht MCP server.
 
 Tools:
   find_structural_clones(file_path, threshold=0.9)
@@ -91,7 +91,7 @@ TEL = setup_telemetry(settings)
 _index = CloneIndex(settings, telemetry=TEL)
 
 mcp = MCPServer(
-    "clone-catcher",
+    "slasht",
     instructions=(
         "Structural clone detection for Python, Go, and C#. START by calling "
         "find_duplicate_groups once: it lists every group of files sharing "

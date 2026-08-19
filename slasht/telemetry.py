@@ -80,8 +80,8 @@ class Telemetry:
 
     def __init__(
         self,
-        service_name: str = "clone-catcher",
-        trace_path: str | Path = "clone_catcher_trace.jsonl",
+        service_name: str = "slasht",
+        trace_path: str | Path = "slasht_trace.jsonl",
         otlp_endpoint: str | None = None,
     ):
         provider = TracerProvider(
@@ -102,20 +102,20 @@ class Telemetry:
                 provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
             except ImportError:
                 print(
-                    "clone-catcher: OTEL_EXPORTER_OTLP_ENDPOINT is set but the "
+                    "slasht: OTEL_EXPORTER_OTLP_ENDPOINT is set but the "
                     "[otlp] extra is not installed; spans go to JSONL only",
                     file=sys.stderr,
                 )
 
         self._provider = provider
-        self._tracer = provider.get_tracer("clone_catcher")
+        self._tracer = provider.get_tracer("slasht")
         atexit.register(self.shutdown)
 
     @contextmanager
     def span(self, name: str, **attributes):
         with self._tracer.start_as_current_span(name) as otel_span:
             for key, value in attributes.items():
-                otel_span.set_attribute(f"clone_catcher.{key}", value)
+                otel_span.set_attribute(f"slasht.{key}", value)
             yield otel_span
 
     def shutdown(self) -> None:

@@ -4,7 +4,7 @@ condition: "\\b(duplicate|duplication|clones?|copy-pasted?|boilerplate|redundant
 scope: "text"
 ---
 
-## Structural Code Search — Use clone-catcher Before Manual Crawling
+## Structural Code Search — Use slasht Before Manual Crawling
 
 When searching for duplicated logic, repeated boilerplate, or candidate files for refactoring across Python, Go, or C#:
 - NEVER crawl or read files sequentially with `read`, `grep`, or custom scripts to find duplicate structures.

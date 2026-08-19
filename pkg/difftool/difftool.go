@@ -5,9 +5,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/carlpatchett/clone-catcher/pkg/minhash"
-	"github.com/carlpatchett/clone-catcher/pkg/parser"
-	"github.com/carlpatchett/clone-catcher/pkg/structural"
+	"github.com/carlpatchett/slasht/pkg/minhash"
+	"github.com/carlpatchett/slasht/pkg/parser"
+	"github.com/carlpatchett/slasht/pkg/structural"
 )
 
 // ChangeRegion describes an AST difference between two files.

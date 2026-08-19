@@ -40,23 +40,23 @@ class Settings:
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     """Build settings from ``env`` (defaults to the process environment)."""
     env = os.environ if env is None else env
-    root = Path(env.get("CLONE_CATCHER_ROOT", Path.cwd())).resolve()
+    root_val = env.get("SLASHT_ROOT") or env.get("CLONE_CATCHER_ROOT")
+    root = Path(root_val if root_val else Path.cwd()).resolve()
 
-    raw_excludes = env.get("CLONE_CATCHER_EXCLUDE", "")
+    raw_excludes = env.get("SLASHT_EXCLUDE") or env.get("CLONE_CATCHER_EXCLUDE") or ""
     excludes = tuple(s.strip() for s in raw_excludes.split(",") if s.strip())
     if not excludes:
         excludes = DEFAULT_EXCLUDES
 
-    trace_raw = env.get("CLONE_CATCHER_TRACE_PATH", "")
+    trace_raw = env.get("SLASHT_TRACE_PATH") or env.get("CLONE_CATCHER_TRACE_PATH") or ""
     trace_path = (
-        Path(trace_raw).resolve() if trace_raw else Path("clone_catcher_trace.jsonl")
+        Path(trace_raw).resolve() if trace_raw else Path("slasht_trace.jsonl")
     )
-
     return Settings(
         root=root,
         exclude_dirs=excludes,
-        shingle_k=int(env.get("CLONE_CATCHER_SHINGLE_K", "4")),
-        num_perm=int(env.get("CLONE_CATCHER_NUM_PERM", "128")),
+        shingle_k=int(env.get("SLASHT_SHINGLE_K", "4")),
+        num_perm=int(env.get("SLASHT_NUM_PERM", "128")),
         trace_path=trace_path,
-        max_query_k=int(env.get("CLONE_CATCHER_MAX_K", "50")),
+        max_query_k=int(env.get("SLASHT_MAX_K", "50")),
     )

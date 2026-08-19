@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/carlpatchett/clone-catcher/pkg/server"
+	"github.com/carlpatchett/slasht/pkg/server"
 )
 
 func main() {
-	root := os.Getenv("CLONE_CATCHER_ROOT")
+	root := os.Getenv("SLASHT_ROOT")
 	if root == "" {
 		root, _ = os.Getwd()
 	}
 
-	tracePath := os.Getenv("CLONE_CATCHER_TRACE_PATH")
+	tracePath := os.Getenv("SLASHT_TRACE_PATH")
 
 	cfg := server.Config{
 		Root:      root,
@@ -22,7 +22,7 @@ func main() {
 
 	srv, err := server.NewServer(cfg)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create clone-catcher server: %v\n", err)
+		fmt.Fprintf(os.Stderr, "failed to create slasht server: %v\n", err)
 		os.Exit(1)
 	}
 

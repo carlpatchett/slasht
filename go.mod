@@ -1,4 +1,4 @@
-module github.com/carlpatchett/clone-catcher
+module github.com/carlpatchett/slasht
 
 go 1.26.6
 

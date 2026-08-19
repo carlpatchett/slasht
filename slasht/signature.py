@@ -80,7 +80,7 @@ class CloneIndex:
         self._records.clear()
         skipped: list[str] = []
         with self._telemetry.span(
-            "clone_catcher.index.build", root=str(self._settings.root)
+            "slasht.index.build", root=str(self._settings.root)
         ):
             for path in self._iter_files():
                 record = self._record_for(path)
@@ -181,7 +181,7 @@ class CloneIndex:
             return []  # empty skeleton: nothing can be structurally similar
 
         with self._telemetry.span(
-            "clone_catcher.index.query", file=key, threshold=threshold
+            "slasht.index.query", file=key, threshold=threshold
         ) as span:
             candidates = self._query_forest(record.minhash)
             matches = []
@@ -232,7 +232,7 @@ class CloneIndex:
 
         edges: dict[frozenset[str], float] = {}
         with self._telemetry.span(
-            "clone_catcher.index.groups", threshold=threshold, files=len(keys)
+            "slasht.index.groups", threshold=threshold, files=len(keys)
         ) as span:
             for key in keys:
                 signature = self._records[key].minhash
