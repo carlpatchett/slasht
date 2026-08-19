@@ -1,0 +1,41 @@
+[project]
+name = "clone-catcher"
+version = "0.1.0"
+description = "Structural code-clone detection MCP server: tree-sitter skeletons + MinHash/LSH, with OpenTelemetry instrumentation and an A/B effectiveness eval harness"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=2.0",
+    "datasketch>=1.6.1",
+    "tree-sitter-language-pack>=0.7",
+    "opentelemetry-api>=1.20",
+    "opentelemetry-sdk>=1.20",
+]
+
+[project.optional-dependencies]
+otlp = [
+    "opentelemetry-exporter-otlp-proto-http>=1.20",
+]
+
+[project.scripts]
+clone-catcher = "clone_catcher.server:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+eval = [
+    "anthropic>=0.40",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["clone_catcher"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

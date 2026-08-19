@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+evals/results/
+clone_catcher_trace.jsonl
+evals/**/trace_augmented_*.jsonl

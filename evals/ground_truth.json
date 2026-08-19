@@ -1,0 +1,49 @@
+{
+  "description": "Planted structural clone groups in evals/messy_codebase. Negative pairs must NOT be flagged at the default 0.9 threshold (asserted < 0.85 with margin).",
+  "groups": [
+    {
+      "id": "retry-backoff",
+      "files": [
+        "legacy_app/payments/retry.py",
+        "legacy_app/notifications/backoff.py"
+      ],
+      "min_similarity": 0.95
+    },
+    {
+      "id": "table-writers",
+      "files": [
+        "legacy_app/reports/csv_export.py",
+        "legacy_app/billing/invoice_writer.py",
+        "legacy_app/analytics/usage_report.py"
+      ],
+      "min_similarity": 0.75
+    },
+    {
+      "id": "bounded-caches",
+      "files": [
+        "legacy_app/utils/lru_cache.py",
+        "legacy_app/services/cache_manager.py"
+      ],
+      "min_similarity": 0.95
+    },
+    {
+      "id": "go-tools",
+      "files": [
+        "tools/backup.go",
+        "tools/cleanup.go"
+      ],
+      "min_similarity": 0.95
+    },
+    {
+      "id": "csharp-builders",
+      "files": [
+        "tools/Mailer.cs",
+        "tools/Notifier.cs"
+      ],
+      "min_similarity": 0.95
+    }
+  ],
+  "negative_pairs": [
+    ["legacy_app/core/visitor_base.py", "legacy_app/search/tree_walker.py"]
+  ]
+}
