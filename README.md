@@ -7,15 +7,19 @@ near-identical boilerplate, and prove with telemetry whether it actually helps.
 
 ## Using it inside omp
 
-Registered at user level in `~/.omp/agent/mcp.json`:
+Build the single static binary:
+```bash
+go build -o bin/clone-catcher ./cmd/clone-catcher
+```
+
+Register in `~/.omp/agent/mcp.json`:
 
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
   "mcpServers": {
     "clone-catcher": {
-      "command": "/home/carlpatchett/repos/clone-catcher/.venv/bin/python",
-      "args": ["-m", "clone_catcher"],
+      "command": "/home/carlpatchett/repos/clone-catcher/bin/clone-catcher",
       "env": {
         "CLONE_CATCHER_ROOT": "${PWD}",
         "CLONE_CATCHER_TRACE_PATH": "${TMPDIR:-/tmp}/clone_catcher_trace.jsonl"
@@ -29,8 +33,7 @@ Registered at user level in `~/.omp/agent/mcp.json`:
 each session indexes the repo you're actually working in (lazily, on the first
 tool call). Register with `/mcp add` or edit the file directly, then
 `/mcp reload` in a live session and `/mcp test clone-catcher`. Tools appear as
-`mcp__clone_catcher_find_structural_clones` etc.
-
+`mcp__clone_catcher_find_duplicate_groups` etc.
 ## How it works
 
 ```
@@ -57,19 +60,17 @@ operator and they don't.
 ## Quickstart
 
 ```bash
-uv sync                # installs server + dev deps
-uv run pytest          # 43 tests: pipeline, MCP contract (in-memory + stdio), fixture calibration, harness
+go test -v -race ./...       # run all unit and integration tests
+go build -o bin/clone-catcher ./cmd/clone-catcher # compile standalone binary
 ```
 
-Register with an MCP host (stdio transport; first launch downloads the
-tree-sitter grammars once, then they're cached):
+Register with an MCP host (stdio JSON-RPC transport):
 
 ```json
 {
   "mcpServers": {
     "clone-catcher": {
-      "command": "uv",
-      "args": ["run", "--directory", "/abs/path/to/clone-catcher", "python", "-m", "clone_catcher"],
+      "command": "/abs/path/to/bin/clone-catcher",
       "env": { "CLONE_CATCHER_ROOT": "/path/to/repo/to/index" }
     }
   }
