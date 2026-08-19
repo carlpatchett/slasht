@@ -88,8 +88,7 @@ def prepare_fixture_copies(base: Path, source_dir: Path) -> tuple[Path, Path, Pa
         ),
         "mcpServers": {
             "slasht": {
-                "command": str(REPO_ROOT / ".venv" / "bin" / "python"),
-                "args": ["-m", "slasht"],
+                "command": str(REPO_ROOT / "bin" / "slasht"),
                 "env": {
                     "SLASHT_ROOT": str(augmented),
                     "SLASHT_TRACE_PATH": str(trace_path),
