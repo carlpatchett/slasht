@@ -51,7 +51,7 @@ class FileMeta:
     language: str
     line_count: int
     token_count: int
-
+    structural_summary: str = ""
 
 @dataclass(frozen=True)
 class _Record:
@@ -137,10 +137,19 @@ class CloneIndex:
         types = token_types(tokens)
         if not types:
             return None
+        structural_summary = " -> ".join(
+            tok
+            for tok in types
+            if "statement" in tok
+            or "definition" in tok
+            or "declaration" in tok
+            or "handler" in tok
+        )[:120]
         meta = FileMeta(
             language=language,
             line_count=source.count(b"\n") + 1,
             token_count=len(types),
+            structural_summary=structural_summary,
         )
         return _Record(
             key=self._key(path),
@@ -251,6 +260,22 @@ class CloneIndex:
                 languages = Counter(
                     self._records[member].meta.language for member in members
                 )
+                sample_file = sorted(members)[0]
+                sample_path = self._settings.root / sample_file
+                sample_snippet = ""
+                if sample_path.is_file():
+                    try:
+                        lines = [
+                            line.rstrip()
+                            for line in sample_path.read_text(errors="replace").splitlines()
+                            if line.strip() and not line.strip().startswith(("#", "//", "/*", "*"))
+                        ]
+                        sample_snippet = "\n".join(lines[:4])[:300]
+                    except Exception:
+                        sample_snippet = ""
+
+                structural_summary = self._records[sample_file].meta.structural_summary
+
                 groups.append(
                     {
                         "files": sorted(members)[:max_files_per_group],
@@ -261,6 +286,9 @@ class CloneIndex:
                         "min_similarity": round(min(sims), 4),
                         "mean_similarity": round(sum(sims) / len(sims), 4),
                         "language": languages.most_common(1)[0][0],
+                        "sample_file": sample_file,
+                        "sample_snippet": sample_snippet,
+                        "structural_summary": structural_summary,
                     }
                 )
             groups.sort(

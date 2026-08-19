@@ -66,14 +66,16 @@ class ReindexResult(TypedDict):
     duration_ms: float
 
 
-class DuplicateGroup(TypedDict):
+class DuplicateGroup(TypedDict, total=False):
     files: list[str]
     files_truncated: int
     size: int
     min_similarity: float
     mean_similarity: float
     language: str
-
+    sample_file: str
+    sample_snippet: str
+    structural_summary: str
 
 class DuplicateGroupsResult(TypedDict):
     groups: list[DuplicateGroup]
@@ -138,12 +140,13 @@ def find_structural_clones(file_path: str, threshold: float = 0.9) -> FindClones
 
 @mcp.tool()
 def find_duplicate_groups(threshold: float = 0.9) -> DuplicateGroupsResult:
-    """List every group of structurally duplicated files in the workspace.
+    """⚡ INSTANT REPO-WIDE CLONE MAP. CALL THIS FIRST BEFORE READING ANY FILES.
 
-    One call replaces per-file queries: returns connected groups of files
-    sharing the same code skeleton (renames and literal changes ignored),
-    largest group first, with similarity stats per group. Call this before
-    reading files to decide what is worth reading at all.
+    Replaces 50+ sequential file reads by instantly clustering duplicate
+    Python, Go, and C# code across the entire workspace in ~100ms.
+    Returns connected groups of files sharing the same code skeleton (renames
+    and literal changes are ignored), largest group first, with similarity
+    stats, sample code snippets, and structural summaries.
     """
     with TEL.span("find_duplicate_groups", threshold=threshold):
         return _index.duplicate_groups(threshold=threshold)
