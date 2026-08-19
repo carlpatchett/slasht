@@ -372,22 +372,22 @@ async def run_agent(model, tools: list[Tool], max_turns: int) -> ArmRun:
 # Scoring
 
 
-def _normalize_path(text: str) -> str | None:
+def _normalize_path(text: str, root: Path) -> str | None:
     cleaned = text.strip().strip("`").lstrip("./")
-    for prefix in (f"{FIXTURE.name}/",):
-        if cleaned.startswith(prefix):
-            cleaned = cleaned[len(prefix) :]
+    prefix = f"{root.name}/"
+    if cleaned.startswith(prefix):
+        cleaned = cleaned[len(prefix) :]
     return cleaned
 
 
-def predicted_pairs(groups: list[dict]) -> set[frozenset[str]]:
+def predicted_pairs(groups: list[dict], root: Path = FIXTURE) -> set[frozenset[str]]:
     pairs: set[frozenset[str]] = set()
     for group in groups:
         files = [
             normalized
             for entry in group.get("files", [])
-            if (normalized := _normalize_path(entry))
-            and (FIXTURE / normalized).is_file()
+            if (normalized := _normalize_path(entry, root))
+            and (root / normalized).is_file()
         ]
         for a, b in itertools.combinations(sorted(set(files)), 2):
             pairs.add(frozenset((a, b)))
@@ -407,8 +407,8 @@ def parse_final_answer(text: str) -> tuple[list[dict], bool]:
     return [], False
 
 
-def score(run: ArmRun, truth: set[frozenset[str]]) -> dict:
-    predicted = predicted_pairs(run.groups)
+def score(groups: list[dict], truth: set[frozenset[str]], root: Path = FIXTURE) -> dict:
+    predicted = predicted_pairs(groups, root)
     hits = len(predicted & truth)
     precision = hits / len(predicted) if predicted else 0.0
     recall = hits / len(truth) if truth else 0.0
@@ -418,7 +418,7 @@ def score(run: ArmRun, truth: set[frozenset[str]]) -> dict:
         else 0.0
     )
     return {
-        "groups_found": len(run.groups),
+        "groups_found": len(groups),
         "predicted_pairs": len(predicted),
         "precision": round(precision, 4),
         "recall": round(recall, 4),
@@ -585,7 +585,7 @@ async def run_eval(
             "output_tokens": run.output_tokens,
             "wall_seconds": run.wall_seconds,
             "parsed_ok": run.parsed_ok,
-            **score(run, truth),
+            **score(run.groups, truth),
         }
 
     report = {

@@ -162,14 +162,10 @@ def _display(path: Path) -> str:
 
 
 def main() -> None:
+    # Grammars prefetch up front (first run downloads once, then cached);
+    # the index builds lazily on the first query so startup stays instant
+    # even in large repositories.
     ensure_languages()
-    with TEL.span("clone_catcher.startup", root=str(settings.root)):
-        stats = _index.build()
-    print(
-        f"clone-catcher: indexed {len(stats['files'])} file(s) "
-        f"({stats['languages']}) in {stats['duration_ms']} ms",
-        file=__import__("sys").stderr,
-    )
     mcp.run()
 
 

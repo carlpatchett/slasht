@@ -5,6 +5,32 @@ same shape but different names, literals, and comments — across Python, Go, an
 C#. Its purpose: stop coding agents from burning tokens reading (and re-reading)
 near-identical boilerplate, and prove with telemetry whether it actually helps.
 
+## Using it inside omp
+
+Registered at user level in `~/.omp/agent/mcp.json`:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/can1357/oh-my-pi/main/packages/coding-agent/src/config/mcp-schema.json",
+  "mcpServers": {
+    "clone-catcher": {
+      "command": "/home/carlpatchett/repos/clone-catcher/.venv/bin/python",
+      "args": ["-m", "clone_catcher"],
+      "env": {
+        "CLONE_CATCHER_ROOT": "${PWD}",
+        "CLONE_CATCHER_TRACE_PATH": "${TMPDIR:-/tmp}/clone_catcher_trace.jsonl"
+      }
+    }
+  }
+}
+```
+
+`${PWD}` expands at discovery time to the directory omp was launched in, so
+each session indexes the repo you're actually working in (lazily, on the first
+tool call). Register with `/mcp add` or edit the file directly, then
+`/mcp reload` in a live session and `/mcp test clone-catcher`. Tools appear as
+`mcp__clone_catcher_find_structural_clones` etc.
+
 ## How it works
 
 ```
@@ -25,7 +51,7 @@ operator and they don't.
 |---|---|
 | `find_structural_clones(file_path, threshold=0.9)` | Files structurally similar to `file_path` (paths relative to the indexed root, similarity desc). |
 | `get_diff_summary(file_a, file_b)` | Whether two files differ only in naming/literals (`identical_structure: true`), and if not, which AST node types/line ranges differ. |
-| `reindex_workspace()` | Rebuild the index after files change (the server also indexes at startup and on first query). |
+| `reindex_workspace()` | Rebuild the index after files change (indexing is otherwise lazy: on the first query). |
 
 ## Quickstart
 
@@ -102,6 +128,29 @@ Reports land in `evals/results/` as markdown + JSON.
 > **Honesty rule:** `mode=scripted` reports carry a disclaimer in the output —
 > they prove the harness works, not that clone-catcher helps. Only live-mode
 > runs are evidence of effectiveness.
+
+### Running the A/B through omp (live model)
+
+`evals/omp_eval.py` runs both arms as real `omp -p` sessions against two
+isolated fixture copies — the augmented copy registers clone-catcher via a
+project-level `.omp/mcp.json`, and the user-level `~/.omp/agent/mcp.json` is
+swapped aside for the run so the baseline can never see it. Token/cost metrics
+come from omp's own per-call usage telemetry; tool calls from the event
+stream; server latency from the OTel spans.
+
+```bash
+uv run python evals/omp_eval.py --model google-antigravity/gemini-3.7-flash:medium
+```
+
+First live result (gemini-3.7-flash, 16-file fixture, kept in
+`evals/results/omp_report_*.md`): both arms found all 7 truth pairs (P/R/F1 =
+1.00), but the augmented arm cost **more** — 108k vs 61k input tokens, 24 vs
+11 LLM calls, $0.138 vs $0.083 — because the model issued 17 per-file
+`find_structural_clones` calls and still read every file. Honest conclusion:
+on a small fixture where reading everything is cheap, the tool adds context
+rather than replacing reads. The mechanism it needs to prove itself is a
+larger fixture with heavyweight files, and likely a one-shot
+"all duplicate groups" tool instead of per-file queries.
 
 ## Repository layout
 
