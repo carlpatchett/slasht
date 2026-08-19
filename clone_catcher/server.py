@@ -77,12 +77,14 @@ class DuplicateGroup(TypedDict, total=False):
     sample_snippet: str
     structural_summary: str
 
+
 class DuplicateGroupsResult(TypedDict):
     groups: list[DuplicateGroup]
     group_count: int
     truncated: bool
     threshold: float
     indexed_files: int
+
 
 settings = load_settings()
 TEL = setup_telemetry(settings)
@@ -122,7 +124,9 @@ def find_structural_clones(file_path: str, threshold: float = 0.9) -> FindClones
     most similar first, with paths relative to the indexed root.
     """
     resolved = _resolve(file_path)
-    with TEL.span("find_structural_clones", file_path=str(resolved), threshold=threshold):
+    with TEL.span(
+        "find_structural_clones", file_path=str(resolved), threshold=threshold
+    ):
         matches = _index.find_clones(resolved, threshold=threshold)
     return {
         "file": _display(resolved),
@@ -162,9 +166,7 @@ def get_diff_summary(file_a: str, file_b: str) -> DiffSummaryResult:
     """
     resolved_a = _resolve(file_a)
     resolved_b = _resolve(file_b)
-    with TEL.span(
-        "get_diff_summary", file_a=str(resolved_a), file_b=str(resolved_b)
-    ):
+    with TEL.span("get_diff_summary", file_a=str(resolved_a), file_b=str(resolved_b)):
         return _diff_summary(
             str(resolved_a), str(resolved_b), shingle_k=settings.shingle_k
         )

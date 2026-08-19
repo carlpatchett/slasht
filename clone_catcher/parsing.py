@@ -7,7 +7,7 @@ Docs: https://docs.tree-sitter-language-pack.xberg.io
 
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 import tree_sitter_language_pack as _pack
@@ -17,7 +17,7 @@ from tree_sitter import Parser, Tree
 LANGUAGES: dict[str, str] = {".py": "python", ".go": "go", ".cs": "csharp"}
 
 
-@lru_cache(maxsize=None)
+@cache
 def parser_for(language: str) -> Parser:
     """Return a cached parser for a supported language key."""
     return _pack.get_parser(language)
@@ -41,5 +41,5 @@ def ensure_languages() -> None:
     """
     try:
         _pack.prefetch(sorted(set(LANGUAGES.values())))
-    except Exception:  # pragma: no cover - prefetch is an optimisation
+    except Exception:  # noqa: BLE001, S110 - pragma: no cover - prefetch is an optimisation
         pass

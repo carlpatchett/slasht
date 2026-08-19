@@ -1,11 +1,10 @@
 """MinHash signatures and the LSH clone index."""
 
 import pytest
+from sources import NOISE_CONFIG, NOISE_FIB, PY_A, PY_CLONE
 
 from clone_catcher.config import Settings
 from clone_catcher.signature import CloneIndex
-
-from sources import NOISE_CONFIG, NOISE_FIB, PY_A, PY_CLONE
 
 
 @pytest.fixture
@@ -66,7 +65,9 @@ class TestFindClones:
 
     def test_query_unindexed_file_computes_signature_on_the_fly(self, index, workspace):
         index.build()
-        (workspace / "late_twin.py").write_text(PY_CLONE.replace("fulfil_request", "dispatch"))
+        (workspace / "late_twin.py").write_text(
+            PY_CLONE.replace("fulfil_request", "dispatch")
+        )
         matches = index.find_clones("late_twin.py", threshold=0.9)
         assert "orders.py" in [m["path"] for m in matches]
 
@@ -80,9 +81,8 @@ class TestDeterminism:
         first = CloneIndex(Settings(root=workspace))
         second = CloneIndex(Settings(root=workspace))
         assert first.build()["files"] == second.build()["files"]
-        assert (
-            first.find_clones("orders.py", threshold=0.9)
-            == second.find_clones("orders.py", threshold=0.9)
+        assert first.find_clones("orders.py", threshold=0.9) == second.find_clones(
+            "orders.py", threshold=0.9
         )
 
 

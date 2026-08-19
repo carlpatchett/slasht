@@ -1,14 +1,14 @@
 """AST-level diff summary between two files."""
 
-from clone_catcher.difftool import diff_summary
-
 from sources import (
     NOISE_FIB,
-    PY_ADDED_BRANCH,
     PY_A,
+    PY_ADDED_BRANCH,
     PY_CLONE,
     PY_LITERALS_ONLY,
 )
+
+from clone_catcher.difftool import diff_summary
 
 
 def write(tmp_path, name, text):
@@ -86,6 +86,4 @@ class TestErrors:
         import pytest
 
         with pytest.raises(ValueError, match="[Uu]nsupported"):
-            diff_summary(
-                write(tmp_path, "a.json", "{}"), write(tmp_path, "b.py", PY_A)
-            )
+            diff_summary(write(tmp_path, "a.json", "{}"), write(tmp_path, "b.py", PY_A))

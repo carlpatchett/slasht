@@ -7,7 +7,7 @@ from collections import Counter
 from pathlib import Path
 
 from .parsing import detect_language, parse_source
-from .signature import SEPARATOR, shingles
+from .signature import shingles
 from .structural import structural_tokens, token_types
 
 MAX_REGIONS = 25
@@ -54,9 +54,7 @@ def diff_summary(file_a: str, file_b: str, shingle_k: int = 4) -> dict:
     side_a = _Side("file_a", Path(file_a))
     side_b = _Side("file_b", Path(file_b))
 
-    matcher = difflib.SequenceMatcher(
-        None, side_a.types, side_b.types, autojunk=False
-    )
+    matcher = difflib.SequenceMatcher(None, side_a.types, side_b.types, autojunk=False)
     regions = []
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "equal":

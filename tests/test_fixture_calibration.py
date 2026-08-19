@@ -38,7 +38,9 @@ def test_planted_pairs_meet_minimum_similarity(index, ground_truth):
 def test_negative_pairs_stay_well_below_default_threshold(index, ground_truth):
     for a, b in ground_truth["negative_pairs"]:
         similarity = index.similarity(a, b)
-        assert similarity < 0.85, f"near-miss pair flagged: {a} vs {b}: {similarity:.3f}"
+        assert similarity < 0.85, (
+            f"near-miss pair flagged: {a} vs {b}: {similarity:.3f}"
+        )
 
 
 def test_cross_group_pairs_stay_below_default_threshold(index, ground_truth):

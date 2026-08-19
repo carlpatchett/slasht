@@ -51,9 +51,7 @@ class JSONLSpanExporter(SpanExporter):
                             "trace_id": format_trace_id(
                                 span.get_span_context().trace_id
                             ),
-                            "span_id": format_span_id(
-                                span.get_span_context().span_id
-                            ),
+                            "span_id": format_span_id(span.get_span_context().span_id),
                             "start_ns": span.start_time,
                             "end_ns": span.end_time,
                             "duration_ms": round(
@@ -67,7 +65,7 @@ class JSONLSpanExporter(SpanExporter):
             with self._path.open("a", encoding="utf-8") as handle:
                 handle.write("\n".join(records) + "\n")
             return SpanExportResult.SUCCESS
-        except Exception:  # pragma: no cover - exporter must never crash the server
+        except Exception:  # noqa: BLE001 - pragma: no cover - exporter must never crash the server
             return SpanExportResult.FAILURE
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -123,7 +121,7 @@ class Telemetry:
     def shutdown(self) -> None:
         try:
             self._provider.shutdown()
-        except Exception:  # pragma: no cover - best effort on exit
+        except Exception:  # noqa: BLE001, S110 - pragma: no cover - best effort on exit
             pass
 
 

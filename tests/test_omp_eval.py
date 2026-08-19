@@ -38,7 +38,10 @@ ALL_GROUPS = {
             "description": "bounded cache",
         },
         {"files": ["tools/backup.go", "tools/cleanup.go"], "description": "go loop"},
-        {"files": ["tools/Mailer.cs", "tools/Notifier.cs"], "description": "cs builder"},
+        {
+            "files": ["tools/Mailer.cs", "tools/Notifier.cs"],
+            "description": "cs builder",
+        },
     ]
 }
 
@@ -151,7 +154,6 @@ def test_isolated_user_mcp_swaps_and_restores(tmp_path):
     (home / ".omp" / "agent").mkdir(parents=True)
     config = home / ".omp" / "agent" / "mcp.json"
 
-
     config.write_text("{}")
 
     with isolated_user_mcp(home) as moved:
@@ -164,6 +166,7 @@ def test_isolated_user_mcp_swaps_and_restores(tmp_path):
     (empty_home / ".omp" / "agent").mkdir(parents=True)
     with isolated_user_mcp(empty_home) as moved:
         assert moved is False
+
 
 def test_fake_omp_large_fixture(tmp_path):
     omp_bin = make_fake_omp(tmp_path)

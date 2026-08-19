@@ -13,6 +13,6 @@ def run_with_backoff(task, tries=6, initial_pause=0.25):
         except RecoverableFault:
             if round_index == tries - 1:
                 raise
-            pause = initial_pause * (2 ** round_index)
+            pause = initial_pause * (2**round_index)
             sleep(pause)
     return None

@@ -51,7 +51,9 @@ def test_cross_family_pairs_stay_below_default_threshold(index, fixture_dir):
         if same:
             continue
         similarity = index.similarity(a, b)
-        assert similarity < 0.85, f"cross-family collision: {a} vs {b}: {similarity:.3f}"
+        assert similarity < 0.85, (
+            f"cross-family collision: {a} vs {b}: {similarity:.3f}"
+        )
 
 
 def test_duplicate_groups_recovers_exact_family_partition(index, fixture_dir):

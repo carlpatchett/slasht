@@ -9,7 +9,6 @@ import json
 
 import pytest
 from mcp import Client
-
 from sources import NOISE_FIB, PY_A, PY_CLONE
 
 
@@ -95,9 +94,7 @@ class TestReindex:
 class TestTelemetry:
     async def test_tool_calls_write_jsonl_spans(self, server, tmp_path):
         async with Client(server.mcp) as client:
-            await client.call_tool(
-                "find_structural_clones", {"file_path": "orders.py"}
-            )
+            await client.call_tool("find_structural_clones", {"file_path": "orders.py"})
         trace_path = tmp_path / "trace.jsonl"
         assert trace_path.exists(), "telemetry must record spans on disk"
         records = [json.loads(line) for line in trace_path.read_text().splitlines()]

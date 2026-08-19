@@ -5,20 +5,19 @@ whitespace leaves the token stream unchanged; changing structure or operators
 does not.
 """
 
-from clone_catcher.parsing import detect_language, parse_source
-from clone_catcher.structural import structural_tokens, token_types
-
 from sources import (
     CS_A,
     CS_CLONE,
     GO_A,
     GO_CLONE,
-    PY_ADDED_BRANCH,
     PY_A,
+    PY_ADDED_BRANCH,
     PY_CLONE,
     PY_LITERALS_ONLY,
-    PY_OPERATOR_SWAP,
 )
+
+from clone_catcher.parsing import detect_language, parse_source
+from clone_catcher.structural import structural_tokens, token_types
 
 
 def stream(source: str, language: str = "python") -> list[str]:

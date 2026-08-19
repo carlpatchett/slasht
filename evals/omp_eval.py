@@ -18,24 +18,24 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
-import os
 import subprocess
 import sys
 import tempfile
 import time
 from collections import Counter
 from contextlib import contextmanager, nullcontext
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from evals.ground_truth import GROUND_TRUTH_PATH  # noqa: E402
-from evals.harness import (  # noqa: E402
+from evals.ground_truth import GROUND_TRUTH_PATH
+from evals.harness import (
     parse_final_answer,
     score,
     server_tool_stats,
@@ -220,6 +220,7 @@ def run_arm(
         command,
         capture_output=True,
         text=True,
+        check=False,
         timeout=budget + timeout_padding,
         env=_clean_env(),
     )
@@ -263,6 +264,7 @@ def score_arm(result: dict, truth: set | None, root: Path) -> dict:
         **metrics,
     }
 
+
 def run_eval(
     model: str = DEFAULT_MODEL,
     max_time: str = "10m",
@@ -288,9 +290,12 @@ def run_eval(
     try:
         if repo_url:
             source_dir = workdir / "source"
-            subprocess.run(["git", "clone", "--depth", "1", repo_url, str(source_dir)], check=True)
+            subprocess.run(
+                ["git", "clone", "--depth", "1", repo_url, str(source_dir)], check=True
+            )
             from clone_catcher.config import Settings
             from clone_catcher.signature import CloneIndex
+
             idx = CloneIndex(Settings(root=source_dir))
             idx.build()
             groups = idx.duplicate_groups(threshold=0.9)["groups"]
@@ -298,18 +303,22 @@ def run_eval(
             fixture_path = repo_url
         elif fixture_type == "large":
             from evals.gen_large_fixture import generate
+
             source_dir = workdir / "source"
             ground_truth = generate(source_dir)
             truth = truth_pairs(ground_truth)
             fixture_path = "synthetic-large"
         else:
             from evals.harness import FIXTURE
+
             source_dir = FIXTURE
             ground_truth = json.loads(GROUND_TRUTH_PATH.read_text())
             truth = truth_pairs(ground_truth)
             fixture_path = str(FIXTURE)
 
-        baseline_dir, augmented_dir, trace_path = prepare_fixture_copies(workdir, source_dir)
+        baseline_dir, augmented_dir, trace_path = prepare_fixture_copies(
+            workdir, source_dir
+        )
         swap = isolated_user_mcp() if swap_user_config else nullcontext(False)
         with swap:
             if arm_choice in ("both", "baseline"):
@@ -317,24 +326,47 @@ def run_eval(
                     omp_bin, baseline_dir, model, max_time, ablate=ablate
                 )
             else:
-                baseline_raw = {"llm_calls": 0, "tool_calls": {}, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "wall_seconds": 0.0, "completed": True, "parsed_ok": False}
+                baseline_raw = {
+                    "llm_calls": 0,
+                    "tool_calls": {},
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "cost_usd": 0.0,
+                    "wall_seconds": 0.0,
+                    "completed": True,
+                    "parsed_ok": False,
+                }
 
             if arm_choice == "both" and cooldown_seconds > 0:
                 time.sleep(cooldown_seconds)
 
             if arm_choice in ("both", "augmented"):
                 augmented_raw = run_arm(
-                    omp_bin, augmented_dir, model, max_time, task=AUGMENTED_TASK, ablate=ablate
+                    omp_bin,
+                    augmented_dir,
+                    model,
+                    max_time,
+                    task=AUGMENTED_TASK,
+                    ablate=ablate,
                 )
             else:
-                augmented_raw = {"llm_calls": 0, "tool_calls": {}, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0, "wall_seconds": 0.0, "completed": True, "parsed_ok": False}
+                augmented_raw = {
+                    "llm_calls": 0,
+                    "tool_calls": {},
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "cost_usd": 0.0,
+                    "wall_seconds": 0.0,
+                    "completed": True,
+                    "parsed_ok": False,
+                }
 
         report = {
             "runner": "omp",
             "mode": "live",
             "model": model,
             "fixture": fixture_path,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "truth_pairs": len(truth) if truth is not None else 0,
             "arms": {
                 "baseline": score_arm(baseline_raw, truth, baseline_dir),
@@ -342,16 +374,20 @@ def run_eval(
             },
             "server_tools": server_tool_stats(trace_path),
             "notes": [
-                "Both arms: identical fixture copies, identical omp builtins, "
-                "identical prompt; only difference is the clone-catcher MCP "
-                "server in the augmented arm.",
-                "omp's per-call usage includes its fixed system-prompt/context "
-                "overhead (~25k input tokens/call at probe time) — identical "
-                "in both arms, so deltas remain meaningful.",
+                (
+                    "Both arms: identical fixture copies, identical omp builtins, "
+                    "identical prompt; only difference is the clone-catcher MCP "
+                    "server in the augmented arm."
+                ),
+                (
+                    "omp's per-call usage includes its fixed system-prompt/context "
+                    "overhead (~25k input tokens/call at probe time) — identical "
+                    "in both arms, so deltas remain meaningful."
+                ),
             ],
         }
 
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
         json_path = out_dir / f"omp_report_{stamp}.json"
         md_path = out_dir / f"omp_report_{stamp}.md"
         json_path.write_text(json.dumps(report, indent=2))

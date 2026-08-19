@@ -78,7 +78,9 @@ def structural_tokens(root) -> list[StructToken]:
         if not node.is_named:
             if node.type not in PUNCTUATION:
                 tokens.append(
-                    StructToken(node.type, node.start_point.row + 1, node.end_point.row + 1)
+                    StructToken(
+                        node.type, node.start_point.row + 1, node.end_point.row + 1
+                    )
                 )
             continue
         if _pruned(node.type):

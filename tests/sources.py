@@ -85,7 +85,7 @@ def process_order(order, inventory):
     return {"status": "ok", "remaining": item.count}
 '''
 
-GO_A = '''\
+GO_A = """\
 package tally
 
 func Sum(values []int) int {
@@ -99,9 +99,9 @@ func Sum(values []int) int {
 \t}
 \treturn total
 }
-'''
+"""
 
-GO_CLONE = '''\
+GO_CLONE = """\
 package accumulation
 
 func Fold(numbers []int) int {
@@ -115,9 +115,9 @@ func Fold(numbers []int) int {
 \t}
 \treturn running
 }
-'''
+"""
 
-CS_A = '''\
+CS_A = """\
 using System.Text;
 
 public class Mailer
@@ -136,9 +136,9 @@ public class Mailer
         return builder.ToString();
     }
 }
-'''
+"""
 
-CS_CLONE = '''\
+CS_CLONE = """\
 using System.Text;
 
 public class Notifier
@@ -157,9 +157,9 @@ public class Notifier
         return buffer.ToString();
     }
 }
-'''
+"""
 
-NOISE_FIB = '''\
+NOISE_FIB = """\
 def fib_stream(limit):
     sequence = []
     previous, current = 0, 1
@@ -167,9 +167,9 @@ def fib_stream(limit):
         sequence.append(current)
         previous, current = current, previous + current
     return sequence
-'''
+"""
 
-NOISE_CONFIG = '''\
+NOISE_CONFIG = """\
 import json
 from pathlib import Path
 
@@ -179,4 +179,4 @@ def load_config(path, overrides=None):
     for key, value in (overrides or {}).items():
         settings[key] = value
     return settings
-'''
+"""

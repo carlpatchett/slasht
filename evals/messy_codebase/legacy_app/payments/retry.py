@@ -13,6 +13,6 @@ def call_with_retries(operation, attempts=5, base_delay=0.5):
         except TransientError:
             if attempt == attempts - 1:
                 raise
-            delay = base_delay * (2 ** attempt)
+            delay = base_delay * (2**attempt)
             sleep(delay)
     return None

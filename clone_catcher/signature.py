@@ -53,6 +53,7 @@ class FileMeta:
     token_count: int
     structural_summary: str = ""
 
+
 @dataclass(frozen=True)
 class _Record:
     key: str
@@ -87,9 +88,7 @@ class CloneIndex:
                     skipped.append(self._key(path))
                     continue
                 self._records[record.key] = record
-            self._forest = MinHashLSHForest(
-                num_perm=self._settings.num_perm, l=8
-            )
+            self._forest = MinHashLSHForest(num_perm=self._settings.num_perm, l=8)
             for key, record in self._records.items():
                 self._forest.add(key, record.minhash)
             self._forest.index()
@@ -105,9 +104,7 @@ class CloneIndex:
     def _iter_files(self) -> list[Path]:
         exclude = set(self._settings.exclude_dirs)
         found: list[Path] = []
-        for dirpath, dirnames, filenames in os.walk(
-            self._settings.root, topdown=True
-        ):
+        for dirpath, dirnames, filenames in os.walk(self._settings.root, topdown=True):
             dirnames[:] = sorted(d for d in dirnames if d not in exclude)
             for name in sorted(filenames):
                 path = Path(dirpath) / name
@@ -153,7 +150,9 @@ class CloneIndex:
         )
         return _Record(
             key=self._key(path),
-            minhash=minhash_for(types, self._settings.shingle_k, self._settings.num_perm),
+            minhash=minhash_for(
+                types, self._settings.shingle_k, self._settings.num_perm
+            ),
             meta=meta,
         )
 
@@ -260,18 +259,21 @@ class CloneIndex:
                 languages = Counter(
                     self._records[member].meta.language for member in members
                 )
-                sample_file = sorted(members)[0]
+                sample_file = min(members)
                 sample_path = self._settings.root / sample_file
                 sample_snippet = ""
                 if sample_path.is_file():
                     try:
                         lines = [
                             line.rstrip()
-                            for line in sample_path.read_text(errors="replace").splitlines()
-                            if line.strip() and not line.strip().startswith(("#", "//", "/*", "*"))
+                            for line in sample_path.read_text(
+                                errors="replace"
+                            ).splitlines()
+                            if line.strip()
+                            and not line.strip().startswith(("#", "//", "/*", "*"))
                         ]
                         sample_snippet = "\n".join(lines[:4])[:300]
-                    except Exception:
+                    except OSError:
                         sample_snippet = ""
 
                 structural_summary = self._records[sample_file].meta.structural_summary
@@ -279,9 +281,7 @@ class CloneIndex:
                 groups.append(
                     {
                         "files": sorted(members)[:max_files_per_group],
-                        "files_truncated": max(
-                            0, len(members) - max_files_per_group
-                        ),
+                        "files_truncated": max(0, len(members) - max_files_per_group),
                         "size": len(members),
                         "min_similarity": round(min(sims), 4),
                         "mean_similarity": round(sum(sims) / len(sims), 4),

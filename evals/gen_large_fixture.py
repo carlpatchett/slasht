@@ -297,7 +297,7 @@ def build_{fn}_report(rows, columns, delimiter="{delim}"):
     return buffer.getvalue()
 '''
 
-GO_TOOL = '''\
+GO_TOOL = """\
 package cmd
 
 import (
@@ -345,9 +345,9 @@ func {Title}(arguments []string) error {
 \tfmt.Printf("processed %d entries for {name}\\n", len(processed))
 \treturn nil
 }
-'''
+"""
 
-CS_JOB = '''\
+CS_JOB = """\
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -408,40 +408,180 @@ namespace Meridian.Jobs
         }
     }
 }
-'''
+"""
 
 # ----------------------------------------------------------------------
 # Family instance tables
 
 HANDLERS = [
-    ("services/orders/api/handlers/order_handler.py", "OrderHandler", "orders", "order_id", "sku", 100, ["status", "channel", "created_after"]),
-    ("services/orders/api/handlers/shipment_handler.py", "ShipmentHandler", "shipments", "shipment_id", "tracking", 100, ["carrier", "state", "shipped_after"]),
-    ("services/orders/api/handlers/refund_handler.py", "RefundHandler", "refunds", "refund_id", "reason", 100, ["status", "method", "requested_after"]),
-    ("services/orders/api/handlers/return_handler.py", "ReturnHandler", "returns", "return_id", "rma", 100, ["state", "warehouse", "opened_after"]),
-    ("services/orders/api/handlers/webhook_handler.py", "WebhookHandler", "webhooks", "hook_id", "topic", 200, ["event", "state", "delivered_after"]),
-    ("services/billing/api/handlers/invoice_handler.py", "InvoiceHandler", "invoices", "invoice_id", "number", 100, ["status", "customer", "issued_after"]),
-    ("services/billing/api/handlers/credit_handler.py", "CreditHandler", "credits", "credit_id", "memo", 100, ["reason", "state", "granted_after"]),
-    ("services/billing/api/handlers/dispute_handler.py", "DisputeHandler", "disputes", "dispute_id", "case_no", 100, ["phase", "outcome", "opened_after"]),
-    ("services/billing/api/handlers/payout_handler.py", "PayoutHandler", "payouts", "payout_id", "reference", 100, ["state", "bank", "settled_after"]),
-    ("services/identity/api/handlers/user_handler.py", "UserHandler", "users", "user_id", "email", 100, ["plan", "active", "joined_after"]),
-    ("services/identity/api/handlers/session_handler.py", "SessionHandler", "sessions", "session_id", "token", 200, ["device", "revoked", "started_after"]),
-    ("services/identity/api/handlers/key_handler.py", "ApiKeyHandler", "keys", "key_id", "prefix", 100, ["scope", "rotated", "created_after"]),
+    (
+        "services/orders/api/handlers/order_handler.py",
+        "OrderHandler",
+        "orders",
+        "order_id",
+        "sku",
+        100,
+        ["status", "channel", "created_after"],
+    ),
+    (
+        "services/orders/api/handlers/shipment_handler.py",
+        "ShipmentHandler",
+        "shipments",
+        "shipment_id",
+        "tracking",
+        100,
+        ["carrier", "state", "shipped_after"],
+    ),
+    (
+        "services/orders/api/handlers/refund_handler.py",
+        "RefundHandler",
+        "refunds",
+        "refund_id",
+        "reason",
+        100,
+        ["status", "method", "requested_after"],
+    ),
+    (
+        "services/orders/api/handlers/return_handler.py",
+        "ReturnHandler",
+        "returns",
+        "return_id",
+        "rma",
+        100,
+        ["state", "warehouse", "opened_after"],
+    ),
+    (
+        "services/orders/api/handlers/webhook_handler.py",
+        "WebhookHandler",
+        "webhooks",
+        "hook_id",
+        "topic",
+        200,
+        ["event", "state", "delivered_after"],
+    ),
+    (
+        "services/billing/api/handlers/invoice_handler.py",
+        "InvoiceHandler",
+        "invoices",
+        "invoice_id",
+        "number",
+        100,
+        ["status", "customer", "issued_after"],
+    ),
+    (
+        "services/billing/api/handlers/credit_handler.py",
+        "CreditHandler",
+        "credits",
+        "credit_id",
+        "memo",
+        100,
+        ["reason", "state", "granted_after"],
+    ),
+    (
+        "services/billing/api/handlers/dispute_handler.py",
+        "DisputeHandler",
+        "disputes",
+        "dispute_id",
+        "case_no",
+        100,
+        ["phase", "outcome", "opened_after"],
+    ),
+    (
+        "services/billing/api/handlers/payout_handler.py",
+        "PayoutHandler",
+        "payouts",
+        "payout_id",
+        "reference",
+        100,
+        ["state", "bank", "settled_after"],
+    ),
+    (
+        "services/identity/api/handlers/user_handler.py",
+        "UserHandler",
+        "users",
+        "user_id",
+        "email",
+        100,
+        ["plan", "active", "joined_after"],
+    ),
+    (
+        "services/identity/api/handlers/session_handler.py",
+        "SessionHandler",
+        "sessions",
+        "session_id",
+        "token",
+        200,
+        ["device", "revoked", "started_after"],
+    ),
+    (
+        "services/identity/api/handlers/key_handler.py",
+        "ApiKeyHandler",
+        "keys",
+        "key_id",
+        "prefix",
+        100,
+        ["scope", "rotated", "created_after"],
+    ),
 ]
 
 REPOSITORIES = [
-    ("services/orders/store/order_repository.py", "OrderRepository", "orders", "order_id"),
-    ("services/orders/store/shipment_repository.py", "ShipmentRepository", "shipments", "shipment_id"),
-    ("services/orders/store/refund_repository.py", "RefundRepository", "refunds", "refund_id"),
-    ("services/billing/store/invoice_repository.py", "InvoiceRepository", "invoices", "invoice_id"),
-    ("services/billing/store/credit_repository.py", "CreditRepository", "credits", "credit_id"),
-    ("services/billing/store/dispute_repository.py", "DisputeRepository", "disputes", "dispute_id"),
-    ("services/identity/store/user_repository.py", "UserRepository", "users", "user_id"),
-    ("services/identity/store/session_repository.py", "SessionRepository", "sessions", "session_id"),
+    (
+        "services/orders/store/order_repository.py",
+        "OrderRepository",
+        "orders",
+        "order_id",
+    ),
+    (
+        "services/orders/store/shipment_repository.py",
+        "ShipmentRepository",
+        "shipments",
+        "shipment_id",
+    ),
+    (
+        "services/orders/store/refund_repository.py",
+        "RefundRepository",
+        "refunds",
+        "refund_id",
+    ),
+    (
+        "services/billing/store/invoice_repository.py",
+        "InvoiceRepository",
+        "invoices",
+        "invoice_id",
+    ),
+    (
+        "services/billing/store/credit_repository.py",
+        "CreditRepository",
+        "credits",
+        "credit_id",
+    ),
+    (
+        "services/billing/store/dispute_repository.py",
+        "DisputeRepository",
+        "disputes",
+        "dispute_id",
+    ),
+    (
+        "services/identity/store/user_repository.py",
+        "UserRepository",
+        "users",
+        "user_id",
+    ),
+    (
+        "services/identity/store/session_repository.py",
+        "SessionRepository",
+        "sessions",
+        "session_id",
+    ),
 ]
 
 CLIENTS = [
     ("services/orders/clients/intake_client.py", "IntakeClient", "order intake"),
-    ("services/orders/clients/tracking_client.py", "TrackingClient", "carrier tracking"),
+    (
+        "services/orders/clients/tracking_client.py",
+        "TrackingClient",
+        "carrier tracking",
+    ),
     ("services/billing/clients/tax_client.py", "TaxClient", "tax engine"),
     ("services/billing/clients/ledger_client.py", "LedgerClient", "general ledger"),
     ("services/identity/clients/email_client.py", "EmailClient", "transactional email"),
@@ -455,10 +595,34 @@ CACHES = [
 ]
 
 REPORTS = [
-    ("services/orders/reporting/shipment_report.py", "shipment", "Shipment volume", ",", "internal_id"),
-    ("services/billing/reporting/revenue_report.py", "revenue", "Revenue summary", ";", "tenant_id"),
-    ("services/identity/reporting/access_report.py", "access", "Access audit", "|", "session_key"),
-    ("services/orders/reporting/audit_report.py", "audit", "Order audit", "\\t", "batch_id"),
+    (
+        "services/orders/reporting/shipment_report.py",
+        "shipment",
+        "Shipment volume",
+        ",",
+        "internal_id",
+    ),
+    (
+        "services/billing/reporting/revenue_report.py",
+        "revenue",
+        "Revenue summary",
+        ";",
+        "tenant_id",
+    ),
+    (
+        "services/identity/reporting/access_report.py",
+        "access",
+        "Access audit",
+        "|",
+        "session_key",
+    ),
+    (
+        "services/orders/reporting/audit_report.py",
+        "audit",
+        "Order audit",
+        "\\t",
+        "batch_id",
+    ),
 ]
 
 GO_TOOLS = [
@@ -985,7 +1149,7 @@ def _chunks(seq, size):
     while chunk := list(itertools.islice(iterator, size)):
         yield chunk
 ''',
-    "tools/internal/fsutil/fsutil.go": '''\
+    "tools/internal/fsutil/fsutil.go": """\
 package fsutil
 
 import (
@@ -1006,8 +1170,8 @@ func Exists(path string) bool {
 \t_, err := os.Stat(path)
 \treturn err == nil
 }
-''',
-    "tools/internal/manifest/manifest.go": '''\
+""",
+    "tools/internal/manifest/manifest.go": """\
 package manifest
 
 import (
@@ -1049,8 +1213,8 @@ func (m *Manifest) Save(path string) error {
 \t}
 \treturn os.WriteFile(path, data, 0o644)
 }
-''',
-    "jobs/JobRegistry.cs": '''\
+""",
+    "jobs/JobRegistry.cs": """\
 using System;
 using System.Collections.Generic;
 
@@ -1082,7 +1246,7 @@ namespace Meridian.Jobs
         }
     }
 }
-''',
+""",
 }
 
 # Extra flavor files (not indexed; they exist for realism)
@@ -1152,7 +1316,7 @@ INIT_PATHS = [
 
 
 def _handler_text(spec):
-    path, cls, plural, key, extra, size_cap, allowed = spec
+    _path, cls, plural, key, extra, size_cap, allowed = spec
     return HANDLER.format(
         cls=cls,
         plural=plural,
@@ -1266,9 +1430,7 @@ def generate(dest: Path) -> dict:
     (dest / "docker-compose.yml").write_text(COMPOSE)
 
     indexed = [path for _, _, paths in FAMILIES for path in paths] + list(NOISE_FILES)
-    lines = sum(
-        (dest / rel).read_text().count("\n") for rel in indexed
-    )
+    lines = sum((dest / rel).read_text().count("\n") for rel in indexed)
     return {
         "groups": [
             {"id": family_id, "files": paths, "min_similarity": 0.95}

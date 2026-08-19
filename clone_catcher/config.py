@@ -48,7 +48,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         excludes = DEFAULT_EXCLUDES
 
     trace_raw = env.get("CLONE_CATCHER_TRACE_PATH", "")
-    trace_path = Path(trace_raw).resolve() if trace_raw else Path("clone_catcher_trace.jsonl")
+    trace_path = (
+        Path(trace_raw).resolve() if trace_raw else Path("clone_catcher_trace.jsonl")
+    )
 
     return Settings(
         root=root,

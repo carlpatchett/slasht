@@ -1,9 +1,9 @@
 """End-to-end: the real server as a stdio subprocess, launched like a host would."""
 
 import sys
-from mcp.client.stdio import stdio_client
-from mcp import Client, StdioServerParameters
 
+from mcp import Client, StdioServerParameters
+from mcp.client.stdio import stdio_client
 from sources import NOISE_FIB, PY_A, PY_CLONE
 
 

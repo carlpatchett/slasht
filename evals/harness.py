@@ -26,7 +26,7 @@ import sys
 import time
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -110,7 +110,9 @@ def make_baseline_tools(root: Path) -> list[Tool]:
         files = sorted(
             path
             for path in root.rglob("*")
-            if path.is_file() and ".git" not in path.parts and path.stat().st_size < 200_000
+            if path.is_file()
+            and ".git" not in path.parts
+            and path.stat().st_size < 200_000
         )
         for path in files[:400]:
             try:
@@ -151,7 +153,10 @@ def make_baseline_tools(root: Path) -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "pattern": {"type": "string"},
-                    "path": {"type": "string", "description": "optional subpath to narrow scope"},
+                    "path": {
+                        "type": "string",
+                        "description": "optional subpath to narrow scope",
+                    },
                 },
                 "required": ["pattern"],
             },
@@ -276,9 +281,7 @@ class AnthropicModel:
             for block in response.content
             if block.type == "tool_use"
         ]
-        text = "".join(
-            block.text for block in response.content if block.type == "text"
-        )
+        text = "".join(block.text for block in response.content if block.type == "text")
         usage = {
             "input_tokens": response.usage.input_tokens,
             "output_tokens": response.usage.output_tokens,
@@ -376,8 +379,7 @@ async def run_agent(model, tools: list[Tool], max_turns: int) -> ArmRun:
 def _normalize_path(text: str, root: Path) -> str | None:
     cleaned = text.strip().strip("`").lstrip("./")
     prefix = f"{root.name}/"
-    if cleaned.startswith(prefix):
-        cleaned = cleaned[len(prefix) :]
+    cleaned = cleaned.removeprefix(prefix)
     return cleaned
 
 
@@ -397,7 +399,9 @@ def predicted_pairs(groups: list[dict], root: Path = FIXTURE) -> set[frozenset[s
 
 def parse_final_answer(text: str) -> tuple[list[dict], bool]:
     candidates = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    blobs = candidates or ([text[text.find("{") : text.rfind("}") + 1]] if "{" in text else [])
+    blobs = candidates or (
+        [text[text.find("{") : text.rfind("}") + 1]] if "{" in text else []
+    )
     for blob in blobs:
         try:
             parsed = json.loads(blob)
@@ -413,11 +417,7 @@ def score(groups: list[dict], truth: set[frozenset[str]], root: Path = FIXTURE) 
     hits = len(predicted & truth)
     precision = hits / len(predicted) if predicted else 0.0
     recall = hits / len(truth) if truth else 0.0
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if precision + recall
-        else 0.0
-    )
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
     return {
         "groups_found": len(groups),
         "predicted_pairs": len(predicted),
@@ -490,7 +490,10 @@ BASELINE_STEPS = [
 
 AUGMENTED_STEPS = [
     {"tool": "list_files", "args": {}},
-    {"tool": "find_structural_clones", "args": {"file_path": "legacy_app/payments/retry.py"}},
+    {
+        "tool": "find_structural_clones",
+        "args": {"file_path": "legacy_app/payments/retry.py"},
+    },
     {
         "tool": "find_structural_clones",
         "args": {"file_path": "legacy_app/reports/csv_export.py", "threshold": 0.7},
@@ -528,8 +531,14 @@ AUGMENTED_STEPS = [
                         ],
                         "description": "bounded OrderedDict cache",
                     },
-                    {"files": ["tools/backup.go", "tools/cleanup.go"], "description": "go filter-and-tag slice loop"},
-                    {"files": ["tools/Mailer.cs", "tools/Notifier.cs"], "description": "csharp string builder renderer"},
+                    {
+                        "files": ["tools/backup.go", "tools/cleanup.go"],
+                        "description": "go filter-and-tag slice loop",
+                    },
+                    {
+                        "files": ["tools/Mailer.cs", "tools/Notifier.cs"],
+                        "description": "csharp string builder renderer",
+                    },
                 ]
             }
         )
@@ -579,7 +588,11 @@ async def run_eval(
 
     def arm_payload(run: ArmRun) -> dict:
         return {
-            "model": getattr(baseline_model if run.arm == "baseline" else augmented_model, "name", model),
+            "model": getattr(
+                baseline_model if run.arm == "baseline" else augmented_model,
+                "name",
+                model,
+            ),
             "turns": run.turns,
             "tool_calls": run.tool_calls,
             "input_tokens": run.input_tokens,
@@ -592,7 +605,7 @@ async def run_eval(
     report = {
         "mode": mode,
         "model": model,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "fixture": str(FIXTURE),
         "truth_pairs": len(truth),
         "arms": {
@@ -601,14 +614,18 @@ async def run_eval(
         },
         "server_tools": server_tool_stats(trace_path),
         "notes": (
-            ["mode=scripted: token/turn numbers are synthetic; report verifies "
-             "harness plumbing only, not clone-catcher effectiveness."]
+            [
+                (
+                    "mode=scripted: token/turn numbers are synthetic; report verifies "
+                    "harness plumbing only, not clone-catcher effectiveness."
+                )
+            ]
             if mode == "scripted"
             else []
         ),
     }
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     json_path = out_dir / f"report_{stamp}.json"
     md_path = out_dir / f"report_{stamp}.md"
     json_path.write_text(json.dumps(report, indent=2))
