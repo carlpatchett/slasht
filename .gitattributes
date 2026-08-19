@@ -1,0 +1,7 @@
+# GitHub Linguist language overrides
+# Exclude test fixtures, synthetic codebases, and evaluation runners from language statistics
+
+evals/** linguist-vendored
+evals/messy_codebase/** linguist-vendored
+evals/results/** linguist-generated
+*.jsonl linguist-generated
