@@ -42,7 +42,7 @@ Evaluated across 5 production codebases totaling 1,917 files using real coding a
 ### Production Codebases with Realistic Engineering Prompts
 
 #### 1. `tiangolo/fastapi` (78k+ Stars, 950 Files, Python)
-> **Prompt:** *"We are refactoring our API endpoints and request/response data models across the codebase to consolidate repetitive boilerplate into reusable generic patterns. Survey the repository, locate the major clusters of parallel endpoint and model implementations that follow the same structural shape, and identify the exact files in each cluster to consolidate."*
+> **Engineer Prompt:** *"We want to clean up our API endpoints and data models across the repo. Where are all the repetitive areas where we're basically writing the same boilerplate over and over so we can consolidate them?"*
 
 | Metric | Baseline | `slasht` | Delta |
 |---|---:|---:|---|
@@ -53,10 +53,10 @@ Evaluated across 5 production codebases totaling 1,917 files using real coding a
 | Cost | $0.280 | $0.141 | -49.6% |
 | F1 Score | 0.07 | 0.29 | 4.1x higher |
 
-Across 950 files, the baseline agent wrote 16 ad-hoc Python scripts and read dozens of files, hallucinating 393 false clone pairs (0.08 precision). `slasht` indexed all 950 files in 1.1 seconds and surfaced the true structural model and endpoint clusters.
+Across 950 files, the baseline agent burned 167k tokens writing ad-hoc Python AST scripts and reading individual files, hallucinating 393 false clone pairs (0.08 precision). `slasht` indexed all 950 files in 1.1 seconds and surfaced the actual structural test and model clusters.
 
 #### 2. `prometheus/prometheus` (55k+ Stars, 727 Files, Go)
-> **Prompt:** *"We are standardizing our service discovery and metric exporter integrations across this repository to eliminate copy-pasted boilerplate. Survey the codebase, locate all clusters of parallel plugin/discovery/exporter boilerplate implementations that follow the same structural pattern, and identify the exact files in each cluster to consolidate."*
+> **Engineer Prompt:** *"We want to standardize our service discovery and metric exporting across the repo. Tell me all the different areas where we could refactor to follow a consistent pattern."*
 
 | Metric | Baseline | `slasht` | Delta |
 |---|---:|---:|---|
@@ -68,7 +68,6 @@ Across 950 files, the baseline agent wrote 16 ad-hoc Python scripts and read doz
 | F1 Score | 0.71 | 0.82 | +0.11 |
 
 Indexed all 727 Go files in 2.7 seconds, surfacing the 26 plugin provider files (`plugin_aws.go`, `plugin_azure.go`, etc.) and 17 service discovery metric definitions that share identical AST skeletons.
-
 #### 3. Additional Architecture Audits
 
 | Repository | Scale & Language | Input Token Savings | LLM Call Reduction | Speedup | F1 Accuracy |
