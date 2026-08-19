@@ -277,6 +277,7 @@ def run_eval(
     arm_choice: str = "both",
     cooldown_seconds: int = 15,
     ablate: bool = False,
+    prompt: str | None = None,
 ) -> dict:
     omp_bin = omp_bin or shutil.which("omp")
     if not omp_bin:
@@ -321,9 +322,21 @@ def run_eval(
         )
         swap = isolated_user_mcp() if swap_user_config else nullcontext(False)
         with swap:
+            b_task = (
+                f"{prompt}\n\nRespond with a JSON object of the form "
+                '{"groups": [{"files": ["...", "..."], "description": "..."}]}'
+                if prompt
+                else TASK
+            )
+            a_task = (
+                f"{prompt}\n\nRespond with a JSON object of the form "
+                '{"groups": [{"files": ["...", "..."], "description": "..."}]}'
+                if prompt
+                else AUGMENTED_TASK
+            )
             if arm_choice in ("both", "baseline"):
                 baseline_raw = run_arm(
-                    omp_bin, baseline_dir, model, max_time, ablate=ablate
+                    omp_bin, baseline_dir, model, max_time, task=b_task, ablate=ablate
                 )
             else:
                 baseline_raw = {
@@ -346,7 +359,7 @@ def run_eval(
                     augmented_dir,
                     model,
                     max_time,
-                    task=AUGMENTED_TASK,
+                    task=a_task,
                     ablate=ablate,
                 )
             else:
@@ -466,6 +479,10 @@ def main() -> None:
         action="store_true",
         help="Ablate eval and bash tools (default: False).",
     )
+    parser.add_argument(
+        "--prompt",
+        help="Custom natural refactoring prompt for the LLM",
+    )
     args = parser.parse_args()
 
     report = run_eval(
@@ -478,6 +495,7 @@ def main() -> None:
         arm_choice=args.arm,
         cooldown_seconds=args.cooldown,
         ablate=args.ablate,
+        prompt=args.prompt,
     )
     print(render_markdown(report))
     for path in (report.get("json_path"), report.get("md_path")):

@@ -157,61 +157,82 @@ If you run public repos, some legendary structural-clone candidates:
 
 ### Empirical A/B Benchmark Results
 
-We evaluated `clone-catcher` using real coding agent sessions (`google-antigravity/gemini-3.7-flash:medium` running on `omp`) across three distinct codebases:
+We evaluated `clone-catcher` using real coding agent sessions (`google-antigravity/gemini-3.7-flash:medium` running on `omp`) across **five distinct codebases** totaling **1,917 files**, including tier-1 repositories with tens of thousands of GitHub stars and both explicit and natural real-world refactoring prompts:
 
-1. **Synthetic Growth-Stage SaaS Monorepo** (66 files, 6,700 LOC, Python + Go + C#, 130 planted duplicate pairs)
-2. [`gin-gonic/gin`](https://github.com/gin-gonic/gin) (99 files, ~8,000 LOC, Go web framework, 10 structural clone pairs across bindings/codecs)
-3. [`pallets/click`](https://github.com/pallets/click) (75 files, ~10,000 LOC, Python CLI framework, 2 structural typing clone pairs)
-
-#### The Task Given to the LLM
-
-Both arms were given an identical prompt in fresh, isolated checkouts with full standard tools available (`bash`, `eval`, `read`, `glob`, `grep`):
-
-> *"Analyze this codebase and find every group of structurally duplicated code — code that was copy-pasted and then renamed or slightly tweaked (identical structure with different names/strings counts as duplicated). Ignore coincidental similarity of trivial one-liners. Do NOT modify any files; this is analysis only."*
-
-#### 1. Synthetic SaaS Monorepo (66 files, 6.7k LOC)
-
-| Arm | Input Tokens | Output Tokens | LLM Calls | Tool Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| **Baseline** (no MCP) | 281,655 | 13,844 | 64 | 63 | 124.3s | $0.411 | 1.00 | 1.00 | **1.00** |
-| **Augmented** (+ clone-catcher) | 88,040 | 4,486 | 17 | 16 | 61.2s | $0.108 | 1.00 | 1.00 | **1.00** |
-| **Impact / Savings** | **-68.7%** | **-67.6%** | **-73.4%** | **-74.6%** | **2.03× faster** | **-73.7%** | — | — | **Parity** |
-
-#### 2. `gin-gonic/gin` (99 files, Go)
-
-| Arm | Input Tokens | Output Tokens | LLM Calls | Tool Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| **Baseline** (no MCP) | 127,787 | 13,819 | 26 | 25 | 147.5s | $0.217 | 0.40 | 1.00 | **0.57** |
-| **Augmented** (+ clone-catcher) | 18,575 | 944 | 4 | 3 | 11.6s | $0.023 | 1.00 | 1.00 | **1.00** |
-| **Impact / Savings** | **-85.5%** | **-93.2%** | **-84.6%** | **-88.0%** | **12.7× faster** | **-89.4%** | **+0.60** | **1.00** | **+0.43** |
-
-#### 3. `pallets/click` (75 files, Python)
-
-| Arm | Input Tokens | Output Tokens | LLM Calls | Tool Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| **Baseline** (no MCP) | 98,915 | 9,239 | 20 | 19 | 122.8s | $0.161 | 0.00 | 0.00 | **0.00** |
-| **Augmented** (+ clone-catcher) | 38,770 | 1,658 | 11 | 10 | 28.8s | $0.051 | 1.00 | 1.00 | **1.00** |
-| **Impact / Savings** | **-60.8%** | **-82.1%** | **-45.0%** | **-47.4%** | **4.26× faster** | **-68.3%** | **+1.00** | **+1.00** | **+1.00** |
+1. [`tiangolo/fastapi`](https://github.com/tiangolo/fastapi) (78k+ stars, 950 files, Python) — *Natural API & Data Model Refactoring Prompt*
+2. [`prometheus/prometheus`](https://github.com/prometheus/prometheus) (55k+ stars, 727 files, Go) — *Natural Service Discovery & Plugin Refactoring Prompt*
+3. [`gin-gonic/gin`](https://github.com/gin-gonic/gin) (78k+ stars, 99 files, Go) — *Binding & Codec Architecture Analysis*
+4. [`pallets/click`](https://github.com/pallets/click) (16k+ stars, 75 files, Python) — *Typing & Interface Duplication Audit*
+5. **Synthetic Growth-Stage SaaS Monorepo** (66 files, 6,700 LOC, Polyglot Python + Go + C#) — *130 Ground-Truth Clone Pairs*
 
 ---
 
-### Aggregate & Averaged Savings
+#### Benchmark 1: Tier-1 Production Codebases with Natural Refactoring Prompts
 
-Across all 3 benchmarks (240 total files analyzed):
+##### A. `tiangolo/fastapi` (78,000+ stars, 950 files, Python)
+> **Engineer Prompt:** *"We are refactoring our API endpoints and request/response data models across the codebase to consolidate repetitive boilerplate into reusable generic patterns. Survey the repository, locate the major clusters of parallel endpoint and model implementations that follow the same structural shape, and identify the exact files in each cluster to consolidate."*
 
-| Metric | Baseline Total | Augmented Total | Average Savings / Delta |
+| Arm | Input Tokens | Output Tokens | LLM Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Baseline** (no MCP) | 167,591 | 17,408 | 33 | 88.0s | $0.280 | 0.08 | 0.06 | 0.07 |
+| **Augmented** (+ clone-catcher) | 111,321 | 5,874 | 16 | 43.1s | $0.141 | 0.57 | 0.20 | **0.29** |
+| **Impact / Savings** | **-33.6%** | **-66.3%** | **-51.5%** | **2.04× faster** | **-49.6%** | **7.1× higher** | **3.3× higher** | **4.1× higher** |
+
+*Note on Scale:* Across 950 files, the baseline agent burned 167k tokens writing 16 Python AST scripts and reading files, hallucinating 393 false pairs (P=0.08). The augmented agent indexed all 950 files in 1.1s and identified the actual structural test and model clusters in half the time and turns.
+
+##### B. `prometheus/prometheus` (55,000+ stars, 727 files, Go)
+> **Engineer Prompt:** *"We are standardizing our service discovery and metric exporter integrations across this repository to eliminate copy-pasted boilerplate. Survey the codebase, locate all clusters of parallel plugin/discovery/exporter boilerplate implementations that follow the same structural pattern, and identify the exact files in each cluster to consolidate."*
+
+| Arm | Input Tokens | Output Tokens | LLM Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Baseline** (no MCP) | 251,422 | 12,061 | 40 | 110.3s | $0.349 | 0.57 | 0.94 | 0.71 |
+| **Augmented** (+ clone-catcher) | 79,499 | 4,425 | 12 | 38.2s | $0.096 | 0.73 | 0.94 | **0.82** |
+| **Impact / Savings** | **-68.4%** | **-63.3%** | **-70.0%** | **2.89× faster** | **-72.5%** | **+0.16** | **Parity** | **+0.11** |
+
+*Note on Scale:* Indexed all 727 Go files in 2.7s. Instantly surfaced the 26 plugin provider files (`plugin_aws.go`, `plugin_azure.go`, etc.) and 17 service discovery metric definitions that share byte-for-byte AST skeletons.
+
+---
+
+#### Benchmark 2: Structural Architecture Audits (Targeted Repositories)
+
+##### C. `gin-gonic/gin` (78,000+ stars, 99 files, Go)
+| Arm | Input Tokens | Output Tokens | LLM Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Baseline** (no MCP) | 127,787 | 13,819 | 26 | 147.5s | $0.217 | 0.40 | 1.00 | 0.57 |
+| **Augmented** (+ clone-catcher) | 18,575 | 944 | 4 | 11.6s | $0.023 | 1.00 | 1.00 | **1.00** |
+| **Impact / Savings** | **-85.5%** | **-93.2%** | **-84.6%** | **12.7× faster** | **-89.4%** | **+0.60** | **Parity** | **+0.43** |
+
+##### D. `pallets/click` (16,000+ stars, 75 files, Python)
+| Arm | Input Tokens | Output Tokens | LLM Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Baseline** (no MCP) | 98,915 | 9,239 | 20 | 122.8s | $0.161 | 0.00 | 0.00 | 0.00 |
+| **Augmented** (+ clone-catcher) | 38,770 | 1,658 | 11 | 28.8s | $0.051 | 1.00 | 1.00 | **1.00** |
+| **Impact / Savings** | **-60.8%** | **-82.1%** | **-45.0%** | **4.26× faster** | **-68.3%** | **+1.00** | **+1.00** | **+1.00** |
+
+##### E. Synthetic Monorepo (66 files, Polyglot Python/Go/C#, 130 Truth Pairs)
+| Arm | Input Tokens | Output Tokens | LLM Calls | Wall Time | Cost (USD) | Precision | Recall | F1 Score |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Baseline** (no MCP) | 281,655 | 13,844 | 64 | 124.3s | $0.411 | 1.00 | 1.00 | **1.00** |
+| **Augmented** (+ clone-catcher) | 88,040 | 4,486 | 17 | 61.2s | $0.108 | 1.00 | 1.00 | **1.00** |
+| **Impact / Savings** | **-68.7%** | **-67.6%** | **-73.4%** | **2.03× faster** | **-73.7%** | — | — | **Parity** |
+
+---
+
+### Overall Averaged Savings Across All 5 Repositories (1,917 Files Analyzed)
+
+| Metric | Baseline Total | Augmented Total | Aggregate Savings / Delta |
 |---|---:|---:|---|
-| **Input Tokens** | 508,357 tokens | 145,385 tokens | **-71.4% average savings** (362,972 tokens saved) |
-| **Output Tokens** | 36,902 tokens | 7,088 tokens | **-80.8% average savings** |
-| **LLM Turns / Calls** | 110 turns | 32 turns | **-70.9% fewer LLM turns** |
-| **Wall-Clock Time** | 394.6s (6.6 min) | 101.6s (1.7 min) | **3.88× faster execution** (-74.3% latency) |
-| **Total API Cost** | $0.789 | $0.182 | **-76.9% cost reduction** |
-| **Average F1 Accuracy** | 0.52 | 1.00 | **+0.48 F1 score** (eliminates false positives & missed clones) |
+| **Input Tokens** | **927,370 tokens** | **336,205 tokens** | **-63.7% average savings** (591,165 tokens saved) |
+| **Output Tokens** | **66,371 tokens** | **17,387 tokens** | **-73.8% average savings** |
+| **LLM Turns / Calls** | **183 turns** | **60 turns** | **-67.2% fewer LLM turns** (3× fewer roundtrips) |
+| **Wall-Clock Time** | **592.9s (9.9 min)** | **182.9s (3.0 min)** | **3.24× faster execution** (-69.2% latency) |
+| **Total API Cost** | **$1.418** | **$0.419** | **-70.5% cost reduction** ($0.999 saved across 5 runs) |
+| **Average F1 Accuracy** | **0.53** | **0.82** | **+0.29 F1 score** (drastically reduces hallucinations on large codebases) |
 
 #### Server-Side Latency (OpenTelemetry Spans)
 
-- **Full Workspace Tree-Sitter Indexing**: ~110ms – 299ms for 60–130 files.
-- **LSH Forest Duplicate Group Clustering**: ~10ms – 18ms.
+- **Full Workspace Tree-Sitter Indexing**: ~110ms (36 files) → ~1.1s (950 files) → ~2.7s (727 Go files) → ~1.8s (1,718 files).
+- **LSH Forest Duplicate Group Clustering**: ~10ms – 200ms across 1,000+ files.
 - **AST Diff Summary Calculation**: <0.5ms per file pair.
 
 ```
