@@ -36,7 +36,6 @@ if str(REPO_ROOT) not in sys.path:
 
 from evals.ground_truth import GROUND_TRUTH_PATH  # noqa: E402
 from evals.harness import (  # noqa: E402
-    FIXTURE,
     parse_final_answer,
     score,
     server_tool_stats,
@@ -60,12 +59,12 @@ TASK = (
 # Fixture preparation
 
 
-def prepare_fixture_copies(base: Path) -> tuple[Path, Path, Path]:
+def prepare_fixture_copies(base: Path, source_dir: Path) -> tuple[Path, Path, Path]:
     """Two identical fixture copies; the augmented one registers clone-catcher."""
     baseline = base / "baseline_repo"
     augmented = base / "augmented_repo"
-    shutil.copytree(FIXTURE, baseline)
-    shutil.copytree(FIXTURE, augmented)
+    shutil.copytree(source_dir, baseline)
+    shutil.copytree(source_dir, augmented)
 
     trace_path = base / "trace_augmented.jsonl"
     mcp_config = {
@@ -216,8 +215,9 @@ def run_arm(
     return parsed
 
 
-def score_arm(result: dict, truth: set, root: Path) -> dict:
+def score_arm(result: dict, truth: set | None, root: Path) -> dict:
     groups, ok = parse_final_answer(result["final_text"])
+    metrics = score(groups, truth, root=root) if truth is not None else {}
     return {
         "llm_calls": result["llm_calls"],
         "input_tokens": result["usage"]["input"],
@@ -227,8 +227,9 @@ def score_arm(result: dict, truth: set, root: Path) -> dict:
         "wall_seconds": result["wall_seconds"],
         "completed": result["completed"],
         "parsed_ok": ok,
-        **score(groups, truth, root=root),
+        **metrics,
     }
+
 
 
 # ----------------------------------------------------------------------
@@ -242,6 +243,8 @@ def run_eval(
     omp_bin: str | None = None,
     swap_user_config: bool = True,
     keep_workdir: bool = False,
+    fixture_type: str = "small",
+    repo_url: str | None = None,
 ) -> dict:
     omp_bin = omp_bin or shutil.which("omp")
     if not omp_bin:
@@ -249,12 +252,32 @@ def run_eval(
     out_dir = out_dir or (REPO_ROOT / "evals" / "results")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    ground_truth = json.loads(GROUND_TRUTH_PATH.read_text())
-    truth = truth_pairs(ground_truth)
-
     workdir = Path(tempfile.mkdtemp(prefix="cc-omp-eval-"))
     try:
-        baseline_dir, augmented_dir, trace_path = prepare_fixture_copies(workdir)
+        if repo_url:
+            source_dir = workdir / "source"
+            subprocess.run(["git", "clone", "--depth", "1", repo_url, str(source_dir)], check=True)
+            from clone_catcher.config import Settings
+            from clone_catcher.signature import CloneIndex
+            idx = CloneIndex(Settings(root=source_dir))
+            idx.build()
+            groups = idx.duplicate_groups(threshold=0.9)["groups"]
+            truth = truth_pairs({"groups": groups})
+            fixture_path = repo_url
+        elif fixture_type == "large":
+            from evals.gen_large_fixture import generate
+            source_dir = workdir / "source"
+            ground_truth = generate(source_dir)
+            truth = truth_pairs(ground_truth)
+            fixture_path = "synthetic-large"
+        else:
+            from evals.harness import FIXTURE
+            source_dir = FIXTURE
+            ground_truth = json.loads(GROUND_TRUTH_PATH.read_text())
+            truth = truth_pairs(ground_truth)
+            fixture_path = str(FIXTURE)
+
+        baseline_dir, augmented_dir, trace_path = prepare_fixture_copies(workdir, source_dir)
         swap = isolated_user_mcp() if swap_user_config else nullcontext(False)
         with swap:
             baseline_raw = run_arm(omp_bin, baseline_dir, model, max_time)
@@ -264,9 +287,9 @@ def run_eval(
             "runner": "omp",
             "mode": "live",
             "model": model,
+            "fixture": fixture_path,
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "fixture": str(FIXTURE),
-            "truth_pairs": len(truth),
+            "truth_pairs": len(truth) if truth is not None else 0,
             "arms": {
                 "baseline": score_arm(baseline_raw, truth, baseline_dir),
                 "augmented": score_arm(augmented_raw, truth, augmented_dir),
@@ -339,13 +362,20 @@ def render_markdown(report: dict) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--max-time", default="10m")
+    parser.add_argument("--max-time", default="15m")
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--keep", action="store_true", help="keep temp workdir")
+    parser.add_argument("--fixture", choices=["small", "large"], default="small")
+    parser.add_argument("--repo", help="Git URL or local path to a public repo")
     args = parser.parse_args()
 
     report = run_eval(
-        model=args.model, max_time=args.max_time, out_dir=args.out, keep_workdir=args.keep
+        model=args.model,
+        max_time=args.max_time,
+        out_dir=args.out,
+        keep_workdir=args.keep,
+        fixture_type=args.fixture,
+        repo_url=args.repo,
     )
     print(render_markdown(report))
     for path in report.get("_report_paths", []):

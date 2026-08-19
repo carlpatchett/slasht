@@ -32,6 +32,7 @@ class TestToolSurface:
         names = {tool.name for tool in result.tools}
         assert {
             "find_structural_clones",
+            "find_duplicate_groups",
             "get_diff_summary",
             "reindex_workspace",
         } <= names
@@ -55,6 +56,18 @@ class TestFindStructuralClones:
                 "find_structural_clones", {"file_path": "ghost.py"}
             )
         assert result.is_error is True
+
+
+class TestFindDuplicateGroups:
+    async def test_returns_group_over_structured_content(self, server):
+        async with Client(server.mcp) as client:
+            result = await client.call_tool("find_duplicate_groups", {})
+        assert result.is_error is False
+        payload = result.structured_content
+        assert payload["group_count"] == 1
+        group = payload["groups"][0]
+        assert set(group["files"]) == {"orders.py", "fulfilment.py"}
+        assert group["mean_similarity"] >= 0.9
 
 
 class TestGetDiffSummary:

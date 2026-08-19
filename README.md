@@ -49,6 +49,7 @@ operator and they don't.
 
 | tool | what it does |
 |---|---|
+| `find_duplicate_groups(threshold=0.9)` | List every group of structurally duplicated files in the workspace, largest first, with per-group similarity stats. Call this BEFORE reading files to decide what is worth reading at all. |
 | `find_structural_clones(file_path, threshold=0.9)` | Files structurally similar to `file_path` (paths relative to the indexed root, similarity desc). |
 | `get_diff_summary(file_a, file_b)` | Whether two files differ only in naming/literals (`identical_structure: true`), and if not, which AST node types/line ranges differ. |
 | `reindex_workspace()` | Rebuild the index after files change (indexing is otherwise lazy: on the first query). |
@@ -135,6 +136,33 @@ Reports land in `evals/results/` as markdown + JSON.
 isolated fixture copies — the augmented copy registers clone-catcher via a
 project-level `.omp/mcp.json`, and the user-level `~/.omp/agent/mcp.json` is
 swapped aside for the run so the baseline can never see it. Token/cost metrics
+come from omp's own per-call usage telemetry; tool calls from the event
+stream; server latency from the OTel spans.
+
+```bash
+# Small synthetic fixture (16 files)
+uv run python evals/omp_eval.py --model google-antigravity/gemini-3.7-flash:medium
+
+# Large synthetic "growth-stage SaaS" fixture (~65 beefy files, 6k LOC)
+uv run python evals/omp_eval.py --fixture large --model google-antigravity/gemini-3.7-flash:medium
+
+# Public repo (cost metrics only; clones depth-1 and uses find_duplicate_groups as reference)
+uv run python evals/omp_eval.py --repo https://github.com/ansible/ansible --max-time 20m
+```
+
+If you run public repos, some legendary structural-clone candidates:
+- `https://github.com/ansible/ansible` (Python modules)
+- `https://github.com/hashicorp/terraform` (Go provider schemas)
+- `https://github.com/home-assistant/core` (Python components)
+
+### Results
+
+First live result (gemini-3.7-flash, 16-file fixture): both arms found all 7
+truth pairs (P/R/F1 = 1.00), but the augmented arm cost **more** — 108k vs 61k
+input tokens, 24 vs 11 LLM calls, $0.138 vs $0.083 — because the model issued
+17 per-file `find_structural_clones` calls and still read every file.
+
+Second live result (gemini-3.7-flash, 66-file "large" fixture): [Pending...]
 come from omp's own per-call usage telemetry; tool calls from the event
 stream; server latency from the OTel spans.
 

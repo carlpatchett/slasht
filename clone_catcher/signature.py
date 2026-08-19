@@ -198,6 +198,88 @@ class CloneIndex:
                 span.set_attribute("matches", len(matches))
         return matches
 
+    def duplicate_groups(
+        self,
+        threshold: float = 0.9,
+        max_groups: int = 25,
+        max_files_per_group: int = 20,
+    ) -> dict:
+        """All groups of mutually similar files (connected components).
+
+        One call replaces per-file queries: builds the similarity graph at
+        ``threshold`` and returns its connected components, largest group
+        first, with per-group similarity stats.
+        """
+        if not 0.0 < threshold <= 1.0:
+            raise ValueError(f"threshold must be in (0, 1], got {threshold}")
+        self._ensure_built()
+        keys = sorted(self._records)
+        parent = {key: key for key in keys}
+
+        def find(key: str) -> str:
+            while parent[key] != key:
+                parent[key] = parent[parent[key]]
+                key = parent[key]
+            return key
+
+        edges: dict[frozenset[str], float] = {}
+        with self._telemetry.span(
+            "clone_catcher.index.groups", threshold=threshold, files=len(keys)
+        ) as span:
+            for key in keys:
+                signature = self._records[key].minhash
+                for candidate in self._query_forest(signature):
+                    if candidate <= key:
+                        continue
+                    similarity = signature.jaccard(self._records[candidate].minhash)
+                    if similarity >= threshold:
+                        edges[frozenset((key, candidate))] = similarity
+                        root_a, root_b = find(key), find(candidate)
+                        if root_a != root_b:
+                            parent[root_b] = root_a
+
+            components: dict[str, list[str]] = {}
+            for key in keys:
+                components.setdefault(find(key), []).append(key)
+
+            groups = []
+            for members in components.values():
+                if len(members) < 2:
+                    continue
+                member_set = frozenset(members)
+                sims = [sim for pair, sim in edges.items() if pair <= member_set]
+                languages = Counter(
+                    self._records[member].meta.language for member in members
+                )
+                groups.append(
+                    {
+                        "files": sorted(members)[:max_files_per_group],
+                        "files_truncated": max(
+                            0, len(members) - max_files_per_group
+                        ),
+                        "size": len(members),
+                        "min_similarity": round(min(sims), 4),
+                        "mean_similarity": round(sum(sims) / len(sims), 4),
+                        "language": languages.most_common(1)[0][0],
+                    }
+                )
+            groups.sort(
+                key=lambda group: (
+                    -group["size"],
+                    -group["mean_similarity"],
+                    group["files"],
+                )
+            )
+            if span is not None:
+                span.set_attribute("groups", len(groups))
+            return {
+                "groups": groups[:max_groups],
+                "group_count": len(groups),
+                "truncated": len(groups) > max_groups,
+                "threshold": threshold,
+                "indexed_files": len(keys),
+            }
+
     def _query_forest(self, minhash: MinHash) -> list[str]:
         if not self._records:
             return []

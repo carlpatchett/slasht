@@ -150,6 +150,8 @@ def test_isolated_user_mcp_swaps_and_restores(tmp_path):
     home = tmp_path / "home"
     (home / ".omp" / "agent").mkdir(parents=True)
     config = home / ".omp" / "agent" / "mcp.json"
+
+
     config.write_text("{}")
 
     with isolated_user_mcp(home) as moved:
@@ -162,3 +164,43 @@ def test_isolated_user_mcp_swaps_and_restores(tmp_path):
     (empty_home / ".omp" / "agent").mkdir(parents=True)
     with isolated_user_mcp(empty_home) as moved:
         assert moved is False
+
+def test_fake_omp_large_fixture(tmp_path):
+    omp_bin = make_fake_omp(tmp_path)
+    report = run_eval(
+        model="fake/model:test",
+        max_time="1m",
+        out_dir=tmp_path / "results",
+        omp_bin=omp_bin,
+        swap_user_config=False,
+        fixture_type="large",
+    )
+    assert report["fixture"] == "synthetic-large"
+    assert report["truth_pairs"] > 7
+
+
+def test_fake_omp_repo_mode(tmp_path, monkeypatch):
+    import subprocess
+
+    original_run = subprocess.run
+
+    def mock_run(cmd, *args, **kwargs):
+        if cmd[0] == "git" and cmd[1] == "clone":
+            dest = Path(cmd[-1])
+            dest.mkdir(parents=True)
+            (dest / "a.py").write_text("def f(): pass")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        return original_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+
+    omp_bin = make_fake_omp(tmp_path)
+    report = run_eval(
+        model="fake/model:test",
+        max_time="1m",
+        out_dir=tmp_path / "results",
+        omp_bin=omp_bin,
+        swap_user_config=False,
+        repo_url="https://github.com/fake/repo",
+    )
+    assert report["fixture"] == "https://github.com/fake/repo"

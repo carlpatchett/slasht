@@ -84,3 +84,42 @@ class TestDeterminism:
             first.find_clones("orders.py", threshold=0.9)
             == second.find_clones("orders.py", threshold=0.9)
         )
+
+
+class TestDuplicateGroups:
+    def test_returns_exactly_the_clone_group(self, index):
+        index.build()
+        result = index.duplicate_groups(threshold=0.9)
+        file_sets = [frozenset(g["files"]) for g in result["groups"]]
+        assert frozenset({"orders.py", "fulfilment.py"}) in file_sets
+
+    def test_noise_files_never_grouped(self, index):
+        index.build()
+        result = index.duplicate_groups(threshold=0.9)
+        grouped = {f for g in result["groups"] for f in g["files"]}
+        assert "numbers.py" not in grouped
+        assert "settings_io.py" not in grouped
+
+    def test_group_similarity_stats_meet_threshold(self, index):
+        index.build()
+        result = index.duplicate_groups(threshold=0.9)
+        group = next(g for g in result["groups"] if "orders.py" in g["files"])
+        assert group["size"] == 2
+        assert group["min_similarity"] >= 0.9
+        assert group["mean_similarity"] >= 0.9
+        assert group["language"] == "python"
+
+    def test_result_reports_counts_and_threshold(self, index):
+        index.build()
+        result = index.duplicate_groups(threshold=0.9)
+        assert result["threshold"] == 0.9
+        assert result["group_count"] == len(result["groups"])
+        assert result["truncated"] is False
+        assert result["indexed_files"] == 4
+
+    def test_invalid_threshold_raises(self, index):
+        index.build()
+        import pytest
+
+        with pytest.raises(ValueError, match="threshold"):
+            index.duplicate_groups(threshold=1.5)

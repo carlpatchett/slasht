@@ -65,6 +65,23 @@ class ReindexResult(TypedDict):
     languages: dict[str, int]
     duration_ms: float
 
+
+class DuplicateGroup(TypedDict):
+    files: list[str]
+    files_truncated: int
+    size: int
+    min_similarity: float
+    mean_similarity: float
+    language: str
+
+
+class DuplicateGroupsResult(TypedDict):
+    groups: list[DuplicateGroup]
+    group_count: int
+    truncated: bool
+    threshold: float
+    indexed_files: int
+
 settings = load_settings()
 TEL = setup_telemetry(settings)
 _index = CloneIndex(settings, telemetry=TEL)
@@ -72,12 +89,14 @@ _index = CloneIndex(settings, telemetry=TEL)
 mcp = MCPServer(
     "clone-catcher",
     instructions=(
-        "Structural clone detection for Python, Go, and C#. Before reading "
-        "files to hunt for duplicated logic, call find_structural_clones on a "
-        "representative file: it returns files with the same code skeleton "
-        "(renames and literal changes are ignored). Use get_diff_summary to "
-        "check whether two files differ only in naming/literals before you "
-        "read both. Call reindex_workspace after files change."
+        "Structural clone detection for Python, Go, and C#. START by calling "
+        "find_duplicate_groups once: it lists every group of files sharing "
+        "the same code skeleton (renames and literal changes are ignored), "
+        "largest group first — use it to decide which files are worth "
+        "reading at all. find_structural_clones does the same lookup for a "
+        "single file; get_diff_summary tells you whether two files differ "
+        "only in naming/literals before you read both. Call "
+        "reindex_workspace after files change."
     ),
 )
 
@@ -115,6 +134,19 @@ def find_structural_clones(file_path: str, threshold: float = 0.9) -> FindClones
         if matches
         else "No structural clones at this threshold.",
     }
+
+
+@mcp.tool()
+def find_duplicate_groups(threshold: float = 0.9) -> DuplicateGroupsResult:
+    """List every group of structurally duplicated files in the workspace.
+
+    One call replaces per-file queries: returns connected groups of files
+    sharing the same code skeleton (renames and literal changes ignored),
+    largest group first, with similarity stats per group. Call this before
+    reading files to decide what is worth reading at all.
+    """
+    with TEL.span("find_duplicate_groups", threshold=threshold):
+        return _index.duplicate_groups(threshold=threshold)
 
 
 @mcp.tool()
