@@ -1,5 +1,7 @@
 <h1 align="center">
   <br>
+  <img src="assets/banner.jpg" alt="slasht banner" width="100%">
+  <br>
   slasht
 </h1>
 
