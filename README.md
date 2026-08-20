@@ -1,8 +1,13 @@
 # slasht
 
-Sub-millisecond AST-LSH Structural Code Deduplication and Architecture Intelligence Engine for Model Context Protocol (MCP).
+[![Go Version](https://img.shields.io/badge/Go-1.26%2B-00ADD8?style=flat&logo=go)](https://golang.org)
+[![Protocol](https://img.shields.io/badge/MCP-2024--11--05-8A2BE2)](https://modelcontextprotocol.io)
+[![Tests](https://img.shields.io/badge/Tests-9%20Passing%20(100%25)-success)](https://github.com/carlpatchett/slasht)
+[![Indexing Speed](https://img.shields.io/badge/Indexing-%3C200ms-brightgreen)](https://github.com/carlpatchett/slasht)
+[![Token Reduction](https://img.shields.io/badge/Token%20Savings--63.7%25-orange)](https://github.com/carlpatchett/slasht)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Finds identical and near-identical logic skeletons across Python, Go, and C# codebases in milliseconds — eliminating LLM boilerplate crawling, hallucinated patterns, and token burn during refactoring and architecture audits.
+Sub-millisecond AST-LSH Structural Code Deduplication and Architecture Intelligence Engine for Model Context Protocol (MCP).
 
 ---
 
