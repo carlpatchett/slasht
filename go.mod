@@ -1,6 +1,6 @@
 module github.com/carlpatchett/slasht
 
-go 1.26.6
+go 1.25.5
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0

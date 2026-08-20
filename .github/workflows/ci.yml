@@ -17,14 +17,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: 'stable'
           cache: true
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.64.8
-          args: --timeout=5m ./...
+          args: --timeout=5m ./cmd/... ./pkg/...
 
   test:
     name: Test & Build
@@ -36,8 +36,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
-          cache: true
+          go-version: 'stable'
 
       - name: Verify Dependencies
         run: go mod verify

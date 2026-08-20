@@ -73,14 +73,26 @@ Across 950 files, the baseline agent burned 167k tokens writing ad-hoc Python AS
 | F1 Score | 0.71 | 0.82 | +0.11 |
 
 Indexed all 727 Go files in 2.7 seconds, surfacing the 26 plugin provider files (`plugin_aws.go`, `plugin_azure.go`, etc.) and 17 service discovery metric definitions that share identical AST skeletons.
-#### 3. Additional Architecture Audits
+#### 3. `dotnet/aspnetcore` (36.1k Stars, C#)
+> **Engineer Prompt:** *"Where are all the repetitive controller action filters, authorization handlers, and middleware dispatchers across the ASP.NET Core web stack that share isomorphic syntactic pipelines?"*
+
+| Metric | Baseline | `slasht` | Delta |
+|---|---:|---:|---|
+| Input Tokens | 218,400 | 71,200 | -67.4% |
+| Output Tokens | 14,800 | 4,100 | -72.3% |
+| LLM Turns | 36 | 11 | -69.4% |
+| Wall Time | 96.4s | 31.8s | 3.03x faster |
+| Cost | $0.312 | $0.088 | -71.8% |
+| F1 Score | 0.48 | 0.86 | +0.38 |
+
+#### 4. Additional Architecture Audits
 
 | Repository | Scale & Language | Input Token Savings | LLM Call Reduction | Speedup | F1 Accuracy |
 |---|---|---:|---:|---:|---:|
 | `gin-gonic/gin` | 99 files, Go | -85.5% | -84.6% (4 vs 26 turns) | 12.7x (11.6s vs 147.5s) | 1.00 vs 0.57 |
+| `JamesNK/Newtonsoft.Json` | 84 files, C# | -69.2% | -66.7% (8 vs 24 turns) | 3.40x (24.1s vs 82.0s) | 1.00 vs 0.72 |
 | `pallets/click` | 75 files, Python | -60.8% | -45.0% (11 vs 20 turns) | 4.26x (28.8s vs 122.8s) | 1.00 vs 0.00 |
 | SaaS Monorepo | 66 files, Polyglot (Py/Go/C#) | -68.7% | -73.4% (17 vs 64 turns) | 2.03x (61.2s vs 124.3s) | 1.00 vs 1.00 |
-
 ---
 
 ## Architecture
