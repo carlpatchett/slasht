@@ -1,0 +1,98 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gci
+    - revive
+    - gocritic
+    - misspell
+    - unconvert
+    - whitespace
+    - copyloopvar
+    - prealloc
+
+linters-settings:
+  govet:
+    enable-all: true
+    disable:
+      - shadow
+      - fieldalignment
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/carlpatchett/slasht)
+  revive:
+    rules:
+      - name: exported
+        disabled: false
+      - name: package-comments
+        disabled: false
+      - name: error-strings
+        disabled: false
+      - name: error-naming
+        disabled: false
+      - name: if-return
+        disabled: false
+      - name: increment-decrement
+        disabled: false
+      - name: var-naming
+        disabled: false
+      - name: receiver-naming
+        disabled: false
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      - unnamedResult
+      - whyNoLint
+      - hugeParam
+      - ifElseChain
+      - nestingReduce
+      - tooManyResultsChecker
+      - octalLiteral
+  misspell:
+    locale: US
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs:
+    - evals
+    - tmp
+    - benchmark_data
+  exclude-rules:
+    - path: evals/
+      linters:
+        - errcheck
+        - govet
+        - ineffassign
+        - staticcheck
+        - unused
+        - gci
+        - revive
+        - gocritic
+        - misspell
+        - unconvert
+        - whitespace
+        - copyloopvar
+        - prealloc
+    - path: _test\.go
+      linters:
+        - errcheck
+        - gosec
+        - revive
+        - prealloc
+    - text: "stutters; consider calling this"
+      linters:
+        - revive

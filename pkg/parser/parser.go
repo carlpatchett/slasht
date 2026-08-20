@@ -1,3 +1,4 @@
+// Package parser wraps Tree-sitter parsers for Python, Go, and C#.
 package parser
 
 import (
@@ -14,6 +15,7 @@ import (
 // LanguageKey identifies supported programming languages.
 type LanguageKey string
 
+// Supported language constants.
 const (
 	LangPython LanguageKey = "python"
 	LangGo     LanguageKey = "go"

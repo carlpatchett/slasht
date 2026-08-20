@@ -14,7 +14,7 @@ func TestDiffFiles(t *testing.T) {
 
 	codeA := "def calculate_tax(amount):\n    rate = 0.2\n    return amount * rate\n"
 	codeB := "def compute_fee(total):\n    multiplier = 0.2\n    return total * multiplier\n" // Clone (renamed)
-	codeC := "def log_message(msg):\n    print(msg)\n    return True\n" // Different structure
+	codeC := "def log_message(msg):\n    print(msg)\n    return True\n"                       // Different structure
 
 	os.WriteFile(fileA, []byte(codeA), 0644)
 	os.WriteFile(fileB, []byte(codeB), 0644)

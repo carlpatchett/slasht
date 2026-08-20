@@ -1,3 +1,4 @@
+// Package server implements the MCP JSON-RPC 2.0 interface for Slasht.
 package server
 
 import (
@@ -5,11 +6,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
+
 	"github.com/carlpatchett/slasht/pkg/difftool"
 	"github.com/carlpatchett/slasht/pkg/index"
 	"github.com/carlpatchett/slasht/pkg/telemetry"
-	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
 )
 
 // Server encapsulates the CloneCatcher MCP server instance.

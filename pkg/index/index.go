@@ -1,3 +1,4 @@
+// Package index provides AST shingle fingerprinting and LSH clone indexing.
 package index
 
 import (
@@ -11,24 +12,25 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
+
 	"github.com/carlpatchett/slasht/pkg/minhash"
 	"github.com/carlpatchett/slasht/pkg/parser"
 	"github.com/carlpatchett/slasht/pkg/structural"
 	"github.com/carlpatchett/slasht/pkg/telemetry"
-	"go.opentelemetry.io/otel/attribute"
 )
 
 var defaultExcludes = map[string]struct{}{
-	".git":         {},
-	".jj":          {},
-	"node_modules": {},
-	".venv":        {},
-	"venv":         {},
-	"__pycache__":  {},
-	"dist":         {},
-	"build":        {},
-	"target":       {},
-	".ruff_cache":  {},
+	".git":          {},
+	".jj":           {},
+	"node_modules":  {},
+	".venv":         {},
+	"venv":          {},
+	"__pycache__":   {},
+	"dist":          {},
+	"build":         {},
+	"target":        {},
+	".ruff_cache":   {},
 	".pytest_cache": {},
 }
 
@@ -49,13 +51,13 @@ type FileRecord struct {
 
 // CloneIndex manages workspace indexing, MinHash signatures, and clone clustering.
 type CloneIndex struct {
-	mu          sync.RWMutex
-	Root        string
-	ShingleK    int
-	NumPerm     int
+	mu           sync.RWMutex
+	Root         string
+	ShingleK     int
+	NumPerm      int
 	MaxFileBytes int64
-	Excludes    map[string]struct{}
-	Tracer      *telemetry.Tracer
+	Excludes     map[string]struct{}
+	Tracer       *telemetry.Tracer
 
 	records map[string]*FileRecord
 	forest  *minhash.LSHForest
@@ -96,9 +98,10 @@ func (idx *CloneIndex) Build(ctx context.Context) (map[string]interface{}, error
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
 
-	ctx, span := idx.Tracer.Start(ctx, "slasht.index.build", attribute.String("root", idx.Root))
-	defer span.End()
-
+	_, span := idx.Tracer.Start(ctx, "slasht.index.build", attribute.String("root", idx.Root))
+	if span != nil {
+		defer span.End()
+	}
 	started := time.Now()
 	idx.records = make(map[string]*FileRecord)
 	idx.forest = minhash.NewLSHForest(idx.NumPerm, 8)
@@ -220,12 +223,13 @@ func (idx *CloneIndex) FindClones(ctx context.Context, targetPath string, thresh
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
-	ctx, span := idx.Tracer.Start(ctx, "find_structural_clones",
+	_, span := idx.Tracer.Start(ctx, "find_structural_clones",
 		attribute.String("file_path", targetPath),
 		attribute.Float64("threshold", threshold),
 	)
-	defer span.End()
-
+	if span != nil {
+		defer span.End()
+	}
 	k := idx.Key(targetPath)
 	rec, exists := idx.records[k]
 
@@ -257,7 +261,7 @@ func (idx *CloneIndex) FindClones(ctx context.Context, targetPath string, thresh
 	}
 
 	candidates := idx.forest.Query(targetMH, threshold, maxK)
-	var matches []map[string]interface{}
+	matches := make([]map[string]interface{}, 0, len(candidates))
 	for _, c := range candidates {
 		meta := idx.records[c.Key].Meta
 		matches = append(matches, map[string]interface{}{
@@ -275,14 +279,14 @@ func (idx *CloneIndex) FindClones(ctx context.Context, targetPath string, thresh
 
 // DuplicateGroup represents a cluster of structurally identical/similar files.
 type DuplicateGroup struct {
-	Size              int      `json:"size"`
-	Files             []string `json:"files"`
-	MeanSimilarity    float64  `json:"mean_similarity"`
-	MinSimilarity     float64  `json:"min_similarity"`
+	Size              int            `json:"size"`
+	Files             []string       `json:"files"`
+	MeanSimilarity    float64        `json:"mean_similarity"`
+	MinSimilarity     float64        `json:"min_similarity"`
 	Languages         map[string]int `json:"languages"`
-	SampleFile        string   `json:"sample_file"`
-	SampleSnippet     string   `json:"sample_snippet"`
-	StructuralSummary string   `json:"structural_summary"`
+	SampleFile        string         `json:"sample_file"`
+	SampleSnippet     string         `json:"sample_snippet"`
+	StructuralSummary string         `json:"structural_summary"`
 }
 
 // DuplicateGroups finds all connected components of structural clones.
@@ -294,9 +298,10 @@ func (idx *CloneIndex) DuplicateGroups(ctx context.Context, threshold float64, m
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 
-	ctx, span := idx.Tracer.Start(ctx, "slasht.index.groups", attribute.Float64("threshold", threshold))
-	defer span.End()
-
+	_, span := idx.Tracer.Start(ctx, "slasht.index.groups", attribute.Float64("threshold", threshold))
+	if span != nil {
+		defer span.End()
+	}
 	if maxGroups <= 0 {
 		maxGroups = 25
 	}
@@ -340,13 +345,11 @@ func (idx *CloneIndex) DuplicateGroups(ctx context.Context, threshold float64, m
 		root := find(k)
 		components[root] = append(components[root], k)
 	}
-
-	var groups []DuplicateGroup
+	groups := make([]DuplicateGroup, 0, len(components))
 	for _, members := range components {
 		if len(members) < 2 {
 			continue
 		}
-
 		sort.Strings(members)
 		langCount := make(map[string]int)
 		for _, m := range members {

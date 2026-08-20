@@ -9,6 +9,7 @@ import (
 	"github.com/cespare/xxhash/v2"
 )
 
+// MinHash configuration defaults.
 const (
 	DefaultNumPerm = 128
 	DefaultK       = 4

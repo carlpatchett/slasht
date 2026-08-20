@@ -1,3 +1,4 @@
+// Package minhash implements MinHash signatures and LSH Forest indexing.
 package minhash
 
 import (
@@ -12,12 +13,12 @@ type LSHForest struct {
 	L       int // Number of prefix trees / bands
 	K       int // Max prefix length (NumPerm / L)
 
-	mu       sync.RWMutex
-	keys     []string
-	keyIndex map[string]int
-	minhashes []*MinHash
+	mu         sync.RWMutex
+	keys       []string
+	keyIndex   map[string]int
+	minhashes  []*MinHash
 	hashtables [][]map[string][]int
-	indexed  bool
+	indexed    bool
 }
 
 // NewLSHForest creates a new LSHForest index.

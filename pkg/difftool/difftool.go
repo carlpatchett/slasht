@@ -1,6 +1,8 @@
+// Package difftool computes structural AST diffs and renamed-only variable analysis.
 package difftool
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -12,12 +14,12 @@ import (
 
 // ChangeRegion describes an AST difference between two files.
 type ChangeRegion struct {
-	Type     string `json:"type"` // "renamed-only" | "structural"
-	Opcode   string `json:"opcode"` // "replace" | "delete" | "insert"
-	LinesA   [2]int `json:"lines_a"`
-	LinesB   [2]int `json:"lines_b"`
-	TokensA  []string `json:"tokens_a,omitempty"`
-	TokensB  []string `json:"tokens_b,omitempty"`
+	Type    string   `json:"type"`   // "renamed-only" | "structural"
+	Opcode  string   `json:"opcode"` // "replace" | "delete" | "insert"
+	LinesA  [2]int   `json:"lines_a"`
+	LinesB  [2]int   `json:"lines_b"`
+	TokensA []string `json:"tokens_a,omitempty"`
+	TokensB []string `json:"tokens_b,omitempty"`
 }
 
 // DiffSummary contains the high-level structural comparison results.
@@ -87,7 +89,7 @@ func DiffFiles(fileA, fileB string, k, numPerm int) (*DiffSummary, error) {
 	}
 
 	if identicalStructure {
-		if string(bytesA) != string(bytesB) {
+		if !bytes.Equal(bytesA, bytesB) {
 			summary.Differences = []ChangeRegion{
 				{
 					Type:   "renamed-only",
@@ -141,12 +143,12 @@ func computeTokenDiffs(tokensA, tokensB []structural.StructToken) []ChangeRegion
 		}
 
 		changes = append(changes, ChangeRegion{
-			Type:     "structural",
-			Opcode:   "replace",
-			LinesA:   [2]int{lineAStart, lineAEnd},
-			LinesB:   [2]int{lineBStart, lineBEnd},
-			TokensA:  subA,
-			TokensB:  subB,
+			Type:    "structural",
+			Opcode:  "replace",
+			LinesA:  [2]int{lineAStart, lineAEnd},
+			LinesB:  [2]int{lineBStart, lineBEnd},
+			TokensA: subA,
+			TokensB: subB,
 		})
 	}
 

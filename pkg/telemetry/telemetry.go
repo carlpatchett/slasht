@@ -1,3 +1,4 @@
+// Package telemetry provides OpenTelemetry instrumentation with JSONL span logging.
 package telemetry
 
 import (
@@ -32,6 +33,7 @@ type SpanRecord struct {
 	Attributes map[string]interface{} `json:"attributes"`
 }
 
+// NewJSONLSpanExporter creates a new JSONL file span exporter.
 func NewJSONLSpanExporter(path string) (*JSONLSpanExporter, error) {
 	if path == "" {
 		return nil, nil
@@ -43,13 +45,13 @@ func NewJSONLSpanExporter(path string) (*JSONLSpanExporter, error) {
 	return &JSONLSpanExporter{file: f}, nil
 }
 
+// ExportSpans serializes completed spans into JSON lines.
 func (e *JSONLSpanExporter) ExportSpans(ctx context.Context, spans []sdktrace.ReadOnlySpan) error {
 	if e == nil || e.file == nil {
 		return nil
 	}
 	e.mu.Lock()
 	defer e.mu.Unlock()
-
 	for _, s := range spans {
 		attrs := make(map[string]interface{})
 		for _, kv := range s.Attributes() {
@@ -66,13 +68,14 @@ func (e *JSONLSpanExporter) ExportSpans(ctx context.Context, spans []sdktrace.Re
 		}
 		data, err := json.Marshal(rec)
 		if err == nil {
-			e.file.Write(data)
-			e.file.WriteString("\n")
+			_, _ = e.file.Write(data)
+			_, _ = e.file.WriteString("\n")
 		}
 	}
 	return nil
 }
 
+// Shutdown closes the underlying span log file.
 func (e *JSONLSpanExporter) Shutdown(ctx context.Context) error {
 	if e == nil || e.file == nil {
 		return nil

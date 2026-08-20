@@ -1,3 +1,4 @@
+// Package structural provides AST token normalization and structural abstraction.
 package structural
 
 import (
@@ -7,26 +8,26 @@ import (
 )
 
 var skipExact = map[string]struct{}{
-	"identifier":       {},
-	"comment":          {},
-	"docstring":        {},
-	"string":           {},
-	"string_content":   {},
-	"escape_sequence":  {},
-	"interpolation":    {},
-	"format_spec":      {},
-	"type_conversion":  {},
-	"number":           {},
-	"integer":          {},
-	"float":            {},
-	"imaginary":        {},
-	"rune":             {},
-	"none":             {},
-	"true":             {},
-	"false":            {},
-	"null":             {},
-	"nil":              {},
-	"boolean":          {},
+	"identifier":      {},
+	"comment":         {},
+	"docstring":       {},
+	"string":          {},
+	"string_content":  {},
+	"escape_sequence": {},
+	"interpolation":   {},
+	"format_spec":     {},
+	"type_conversion": {},
+	"number":          {},
+	"integer":         {},
+	"float":           {},
+	"imaginary":       {},
+	"rune":            {},
+	"none":            {},
+	"true":            {},
+	"false":           {},
+	"null":            {},
+	"nil":             {},
+	"boolean":         {},
 }
 
 var skipSuffixes = []string{

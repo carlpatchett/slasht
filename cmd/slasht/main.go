@@ -1,3 +1,4 @@
+// Package main provides the Slasht MCP server entrypoint.
 package main
 
 import (

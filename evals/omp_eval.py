@@ -263,6 +263,66 @@ def score_arm(result: dict, truth: set | None, root: Path) -> dict:
         **metrics,
     }
 
+def reference_groups(root: Path) -> list[dict]:
+    """Ask the shipped Go binary for its reference duplicate groups.
+
+    Ground truth for public repos is the server's own clustering (same
+    methodology as before, now computed by the artifact we ship).
+    """
+    binary = REPO_ROOT / "bin" / "slasht"
+    if not binary.is_file():
+        raise SystemExit(f"slasht binary missing: build it first ({binary})")
+    proc = subprocess.Popen(
+        [str(binary)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        env={**os.environ, "SLASHT_ROOT": str(root)},
+    )
+    try:
+        reqs = [
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "eval-reference", "version": "1.0"},
+                },
+            },
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {
+                    "name": "find_duplicate_groups",
+                    "arguments": {
+                        "threshold": 0.9,
+                        "max_groups": 50,
+                        "max_files_per_group": 50,
+                    },
+                },
+            },
+        ]
+        for req in reqs:
+            proc.stdin.write(json.dumps(req) + "\n")
+            proc.stdin.flush()
+        # initialize response, then the tool response
+        lines: list[str] = []
+        for _ in reqs:
+            line = proc.stdout.readline()
+            if not line:
+                raise SystemExit("slasht binary closed stdio unexpectedly")
+            lines.append(line)
+        payload = json.loads(lines[-1])
+        text = payload["result"]["content"][0]["text"]
+        return json.loads(text)["groups"]
+    finally:
+        proc.kill()
+        proc.wait()
+
 
 def run_eval(
     model: str = DEFAULT_MODEL,
@@ -293,12 +353,7 @@ def run_eval(
             subprocess.run(
                 ["git", "clone", "--depth", "1", repo_url, str(source_dir)], check=True
             )
-            from slasht.config import Settings
-            from slasht.signature import CloneIndex
-
-            idx = CloneIndex(Settings(root=source_dir))
-            idx.build()
-            groups = idx.duplicate_groups(threshold=0.9)["groups"]
+            groups = reference_groups(source_dir)
             truth = truth_pairs({"groups": groups})
             fixture_path = repo_url
         elif fixture_type == "large":

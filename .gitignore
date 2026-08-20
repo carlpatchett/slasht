@@ -8,5 +8,7 @@ build/
 evals/**/trace_augmented_*.jsonl
 .eval_workdir/
 clone_catcher_trace.jsonl
-evals/**/trace_augmented_*.jsonl
 bin/
+evals/results/
+*.log
+tmp/
