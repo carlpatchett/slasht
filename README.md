@@ -8,12 +8,12 @@
 <h4 align="center">Sub-millisecond AST-LSH Structural Code Deduplication & Architecture Intelligence Engine for Model Context Protocol (MCP).</h4>
 
 <p align="center">
+  <a href="https://github.com/carlpatchett/slasht/releases"><img src="https://img.shields.io/badge/Version-v1.0.0-007ec6?style=flat-square" alt="Version"></a>
   <a href="https://golang.org"><img src="https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go Version"></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-2024--11--05-8A2BE2?style=flat-square" alt="Protocol"></a>
   <a href="https://github.com/carlpatchett/slasht/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/carlpatchett/slasht/ci.yml?branch=main&style=flat-square&label=CI&logo=github&logoColor=white" alt="CI Status"></a>
-  <a href="https://github.com/carlpatchett/slasht"><img src="https://img.shields.io/badge/Indexing-%3C200ms-brightgreen?style=flat-square" alt="Indexing Speed"></a>
-  <a href="https://github.com/carlpatchett/slasht"><img src="https://img.shields.io/badge/Token%20Savings--63.7%25-orange?style=flat-square" alt="Token Savings"></a>
-  <a href="https://github.com/carlpatchett/slasht"><img src="https://img.shields.io/badge/Recall-100%25-blue?style=flat-square" alt="Recall"></a>
+  <a href="https://github.com/carlpatchett/slasht"><img src="https://img.shields.io/badge/Tests-Passing%20(100%25)-success?style=flat-square" alt="Tests"></a>
+  <a href="#empirical-benchmarks"><img src="https://img.shields.io/badge/Token%20Savings--63.7%25-orange?style=flat-square" alt="Token Savings"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" alt="License"></a>
 </p>
 
