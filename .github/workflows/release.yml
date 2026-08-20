@@ -65,18 +65,13 @@ jobs:
           TARGET_DIR="dist/slasht_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}"
           mkdir -p "$TARGET_DIR"
           go build -ldflags="-s -w -X main.Version=${VERSION}" -o "$TARGET_DIR/${{ matrix.bin }}" ./cmd/slasht
-          
-          if [ "${{ matrix.os }}" = "windows" ]; then
-            (cd dist && zip -r "slasht_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}.zip" "slasht_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}")
-          else
-            tar -czvf "dist/slasht_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}.tar.gz" -C dist "slasht_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}"
-          fi
+          tar -czvf "dist/slasht_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}.tar.gz" -C dist "slasht_${VERSION}_${{ matrix.os }}_${{ matrix.arch }}"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: slasht-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/*.*
+          path: dist/*.tar.gz
 
   release:
     name: Publish GitHub Release
@@ -104,7 +99,7 @@ jobs:
       - name: Generate Checksums
         run: |
           cd dist
-          sha256sum *.tar.gz *.zip > checksums.txt
+          sha256sum *.tar.gz > checksums.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -115,7 +110,6 @@ jobs:
           prerelease: false
           files: |
             dist/*.tar.gz
-            dist/*.zip
             dist/checksums.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
