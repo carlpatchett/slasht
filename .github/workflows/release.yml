@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    name: Build & Publish Release Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      - name: Determine Version
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_ENV
+          fi
+
+      - name: Build Cross-Platform Binaries
+        run: |
+          mkdir -p dist
+          PLATFORMS=(
+            "linux/amd64/slasht"
+            "linux/arm64/slasht"
+            "darwin/amd64/slasht"
+            "darwin/arm64/slasht"
+            "windows/amd64/slasht.exe"
+          )
+          for PLATFORM in "${PLATFORMS[@]}"; do
+            GOOS=$(echo "$PLATFORM" | cut -d/ -f1)
+            GOARCH=$(echo "$PLATFORM" | cut -d/ -f2)
+            BIN_NAME=$(echo "$PLATFORM" | cut -d/ -f3)
+            TARGET_DIR="dist/slasht_${VERSION}_${GOOS}_${GOARCH}"
+            mkdir -p "$TARGET_DIR"
+            echo "Building $GOOS/$GOARCH..."
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build \
+              -ldflags="-s -w -X main.Version=${VERSION}" \
+              -o "$TARGET_DIR/$BIN_NAME" ./cmd/slasht
+            
+            if [ "$GOOS" = "windows" ]; then
+              (cd dist && zip -r "slasht_${VERSION}_${GOOS}_${GOARCH}.zip" "slasht_${VERSION}_${GOOS}_${GOARCH}")
+            else
+              tar -czvf "dist/slasht_${VERSION}_${GOOS}_${GOARCH}.tar.gz" -C dist "slasht_${VERSION}_${GOOS}_${GOARCH}"
+            fi
+          done
+
+      - name: Generate Checksums
+        run: |
+          cd dist
+          sha256sum *.tar.gz *.zip > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
