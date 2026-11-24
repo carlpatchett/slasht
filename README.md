@@ -22,7 +22,7 @@
   <a href="#mcp-tools">MCP Tools</a> •
   <a href="#architecture">Architecture</a> •
   <a href="#configuration">Configuration</a> •
-  <a href="#license">License</a>
+  <a href="#credits--license">License</a>
 </p>
 
 ---
@@ -54,19 +54,16 @@ Instead of burning 60%–85% of their token budget on sequential file reads, reg
 
 ##### 1. Via Go CLI (Recommended for Go developers):
 ```bash
-# Configure private module routing
-export GOPRIVATE="github.com/carlpatchett/*"
-
 # Install latest binary directly to ~/go/bin/slasht
 go install github.com/carlpatchett/slasht/cmd/slasht@latest
 ```
 
-##### 2. Via Authenticated One-Line Installer (Zero Dependencies):
+##### 2. Via One-Line Installer (Zero Dependencies):
 ```bash
 curl -fsSL https://raw.githubusercontent.com/carlpatchett/slasht/main/install.sh | bash
 ```
 > [!TIP]
-> The installer automatically detects your existing `gh` CLI credentials or `$GITHUB_TOKEN` to authenticate and download pre-built cross-platform static binaries (`linux/amd64`, `linux/arm64`, `darwin/arm64`, `darwin/amd64`, `windows/amd64`) directly to `~/.local/bin/`.
+> The installer downloads pre-built cross-platform static binaries (`linux/amd64`, `linux/arm64`, `darwin/arm64`, `darwin/amd64`, `windows/amd64`) directly to `~/.local/bin/`.
 
 ##### 3. MCP Agent Host Configuration:
 Add `slasht` to your MCP client configuration (e.g. `~/.omp/agent/mcp.json`, Claude Desktop, Cursor, or Zed):
